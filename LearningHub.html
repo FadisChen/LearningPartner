@@ -1,0 +1,842 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>iPAS AI 智慧學習中心</title>
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- Google Fonts -->
+    <link
+        href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&family=Noto+Sans+TC:wght@300;400;500;700&display=swap"
+        rel="stylesheet">
+
+    <!-- Markmap -->
+    <script src="https://cdn.jsdelivr.net/npm/d3@7"></script>
+    <script src="https://cdn.jsdelivr.net/npm/markmap-view"></script>
+    <script src="https://cdn.jsdelivr.net/npm/markmap-lib"></script>
+
+    <!-- Google Generative AI -->
+    <script type="importmap">
+      {
+        "imports": {
+          "@google/generative-ai": "https://esm.run/@google/generative-ai"
+        }
+      }
+    </script>
+
+    <!-- Markdown Parser -->
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+
+    <!-- Shepherd.js for Tour -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/shepherd.js@10.0.1/dist/css/shepherd.css" />
+    <script src="https://cdn.jsdelivr.net/npm/shepherd.js@10.0.1/dist/js/shepherd.min.js"></script>
+
+    <style>
+        body {
+            font-family: 'Outfit', 'Noto Sans TC', sans-serif;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        /* Glassmorphism */
+        .glass {
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+
+        /* Markmap */
+        #markmap-container svg {
+            width: 100%;
+            height: 100%;
+        }
+
+        /* Typing Animation */
+        .typing-dot {
+            animation: typing 1.4s infinite ease-in-out both;
+        }
+
+        .typing-dot:nth-child(1) {
+            animation-delay: -0.32s;
+        }
+
+        .typing-dot:nth-child(2) {
+            animation-delay: -0.16s;
+        }
+
+        @keyframes typing {
+
+            0%,
+            80%,
+            100% {
+                transform: scale(0);
+            }
+
+            40% {
+                transform: scale(1);
+            }
+        }
+
+        /* Tour Customization */
+        .shepherd-element {
+            filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.1));
+            border-radius: 12px;
+        }
+
+        .shepherd-title {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: #1e293b;
+        }
+
+        .shepherd-text {
+            font-size: 0.95rem;
+            color: #475569;
+        }
+
+        .shepherd-button-primary {
+            background: #2563eb !important;
+            border-radius: 8px !important;
+        }
+    </style>
+</head>
+
+<body class="flex h-screen text-slate-800">
+
+    <!-- Sidebar -->
+    <aside class="w-80 glass flex flex-col border-r border-white/50 z-20 shadow-xl transition-all duration-300"
+        id="sidebar">
+        <!-- Header -->
+        <div class="p-6 border-b border-white/50 flex justify-between items-center">
+            <div>
+                <h1
+                    class="text-2xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
+                    AI 學習中心
+                </h1>
+                <p class="text-xs text-slate-500 mt-1">iPAS AI 應用規劃師</p>
+            </div>
+            <button onclick="app.startTour()" class="text-slate-400 hover:text-blue-500" title="開啟教學">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                    <path fill-rule="evenodd"
+                        d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z"
+                        clip-rule="evenodd" />
+                </svg>
+            </button>
+        </div>
+
+        <!-- Settings: API Key & Model -->
+        <div class="px-6 py-4 space-y-4">
+            <!-- API Key -->
+            <div id="apiKeySection" class="relative">
+                <label class="block text-xs font-semibold text-slate-500 mb-2 uppercase tracking-wider">Gemini API
+                    Key</label>
+                <div class="flex gap-2">
+                    <input type="password" id="apiKeyInput" placeholder="輸入 API Key"
+                        class="w-full bg-white/50 border border-slate-200 rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-500/50 transition-all placeholder:text-slate-400">
+                    <button id="saveKeyBtn"
+                        class="bg-blue-600 hover:bg-blue-700 text-white rounded-lg px-3 py-2 transition-colors shadow-lg shadow-blue-500/30">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                            <path fill-rule="evenodd"
+                                d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                                clip-rule="evenodd" />
+                        </svg>
+                    </button>
+                </div>
+                <p id="keyStatus" class="text-[10px] text-slate-400 mt-1 pl-1">Key 儲存於瀏覽器本地端</p>
+            </div>
+
+            <!-- Model Selector -->
+            <div id="modelSection" class="relative">
+                <label class="block text-xs font-semibold text-slate-500 mb-2 uppercase tracking-wider">使用模型
+                    (Model ID)</label>
+                <input type="text" id="modelInput" value="gemini-2.5-flash" placeholder="例如: gemini-2.5-flash"
+                    class="w-full bg-white/50 border border-slate-200 rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-500/50 transition-all font-mono text-slate-600">
+            </div>
+        </div>
+
+        <!-- Navigation -->
+        <nav class="flex-1 overflow-y-auto px-4 space-y-2 py-2" id="subjectNav">
+            <div class="space-y-1">
+                <label
+                    class="block text-xs font-semibold text-slate-500 mb-2 px-2 uppercase tracking-wider">選擇科目</label>
+
+                <button onclick="app.switchSubject('subject1')" id="nav-subject1"
+                    class="w-full text-left px-4 py-3 rounded-xl transition-all duration-200 flex items-center gap-3 group bg-white/40 hover:bg-white/80 border border-transparent hover:border-blue-200 shadow-sm">
+                    <div
+                        class="w-8 h-8 rounded-lg bg-blue-100 text-blue-600 flex items-center justify-center group-hover:scale-110 transition-transform font-bold">
+                        1</div>
+                    <div>
+                        <div class="font-semibold text-sm">應用規劃</div>
+                        <div class="text-[10px] text-slate-500">人工智慧技術</div>
+                    </div>
+                </button>
+
+                <button onclick="app.switchSubject('subject2')" id="nav-subject2"
+                    class="w-full text-left px-4 py-3 rounded-xl transition-all duration-200 flex items-center gap-3 group hover:bg-white/80 border border-transparent hover:border-green-200">
+                    <div
+                        class="w-8 h-8 rounded-lg bg-green-100 text-green-600 flex items-center justify-center group-hover:scale-110 transition-transform font-bold">
+                        2</div>
+                    <div>
+                        <div class="font-semibold text-sm">大數據分析</div>
+                        <div class="text-[10px] text-slate-500">處理與應用</div>
+                    </div>
+                </button>
+
+                <button onclick="app.switchSubject('subject3')" id="nav-subject3"
+                    class="w-full text-left px-4 py-3 rounded-xl transition-all duration-200 flex items-center gap-3 group hover:bg-white/80 border border-transparent hover:border-purple-200">
+                    <div
+                        class="w-8 h-8 rounded-lg bg-purple-100 text-purple-600 flex items-center justify-center group-hover:scale-110 transition-transform font-bold">
+                        3</div>
+                    <div>
+                        <div class="font-semibold text-sm">機器學習</div>
+                        <div class="text-[10px] text-slate-500">技術與應用</div>
+                    </div>
+                </button>
+            </div>
+
+            <!-- File Upload Area for Current Subject -->
+            <div class="mt-8 px-2" id="uploadSection">
+                <label class="block text-xs font-semibold text-slate-500 mb-2 uppercase tracking-wider">學習指引
+                    (Context)</label>
+                <div class="relative group">
+                    <input type="file" id="pdfUploader" accept="application/pdf"
+                        class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10" disabled>
+                    <div
+                        class="bg-white/40 border-2 border-dashed border-slate-300 rounded-xl p-4 text-center transition-all group-hover:border-blue-400 group-hover:bg-white/60">
+                        <svg xmlns="http://www.w3.org/2000/svg"
+                            class="h-6 w-6 mx-auto text-slate-400 mb-2 group-hover:text-blue-500" fill="none"
+                            viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                        </svg>
+                        <p class="text-xs text-slate-600 font-medium" id="uploadText">選擇 PDF 檔案</p>
+                        <p class="text-[10px] text-slate-400 mt-1">提供 AI 參考文件</p>
+                    </div>
+                </div>
+                <div id="fileStatus"
+                    class="mt-2 text-[10px] text-emerald-600 font-medium hidden flex items-center gap-1">
+                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                    </svg>
+                    <span>檔案已載入</span>
+                </div>
+            </div>
+        </nav>
+
+        <!-- Footer -->
+        <div class="p-4 border-t border-white/50 text-center">
+            <p class="text-[10px] text-slate-400">Powered by Google Gemini</p>
+        </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="flex-1 flex flex-col relative overflow-hidden">
+        <!-- Floating Header / Tabs -->
+        <div class="absolute top-4 left-4 right-4 z-10 flex justify-between items-start pointer-events-none">
+            <div class="glass rounded-xl p-1 flex gap-1 pointer-events-auto shadow-lg" id="tabContainer">
+                <button onclick="app.switchTab('map')" id="tab-map"
+                    class="px-4 py-2 rounded-lg text-sm font-medium bg-blue-100 text-blue-700 shadow-sm transition-all">
+                    知識架構圖
+                </button>
+                <button onclick="app.switchTab('chat')" id="tab-chat"
+                    class="px-4 py-2 rounded-lg text-sm font-medium hover:bg-white/50 text-slate-600 transition-all flex gap-2 items-center">
+                    <span>AI 導師</span>
+                    <span class="bg-blue-600 text-white text-[10px] px-1.5 py-0.5 rounded-full hidden"
+                        id="chatBadge">新訊息</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- View: Knowledge Map -->
+        <div id="view-map" class="flex-1 w-full h-full bg-white/30 backdrop-blur-sm transition-opacity duration-300">
+            <div class="w-full h-full" id="markmap-container">
+                <svg id="markmap" class="w-full h-full"></svg>
+            </div>
+            <!-- Floating Node Action Context Menu (Hidden by default) -->
+            <div id="nodeContextMenu"
+                class="absolute hidden glass rounded-lg shadow-xl p-2 z-50 min-w-[150px] transform transition-all scale-95 opacity-0">
+                <div class="text-xs font-bold text-slate-500 px-2 py-1 border-b border-slate-200 mb-1"
+                    id="selectedNodeTitle">Topic</div>
+                <button onclick="app.askAI('explain')"
+                    class="w-full text-left px-2 py-1.5 text-sm hover:bg-blue-50 text-slate-700 rounded flex gap-2 items-center">
+                    <span>💡</span> 解釋這個概念
+                </button>
+                <button onclick="app.askAI('quiz')"
+                    class="w-full text-left px-2 py-1.5 text-sm hover:bg-green-50 text-slate-700 rounded flex gap-2 items-center">
+                    <span>❓</span> 出一題考我
+                </button>
+            </div>
+        </div>
+
+        <!-- View: AI Chat -->
+        <div id="view-chat" class="hidden flex-1 w-full h-full bg-white/50 flex flex-col pt-16">
+            <!-- Chat Messages -->
+            <div id="chatHistory" class="flex-1 overflow-y-auto px-10 py-4 space-y-6">
+                <!-- Welcome Message -->
+                <div class="flex gap-4">
+                    <div
+                        class="w-8 h-8 rounded-full bg-gradient-to-tr from-blue-500 to-purple-500 flex-shrink-0 flex items-center justify-center text-white font-bold text-xs">
+                        AI</div>
+                    <div
+                        class="max-w-2xl bg-white rounded-2xl rounded-tl-none p-4 shadow-sm text-sm leading-relaxed text-slate-700 border border-slate-100">
+                        你好！我是你的 AI 導師。歡迎上傳學習指引 PDF，或是在知識架構圖中點擊任何主題，讓我為你解說！
+                    </div>
+                </div>
+            </div>
+
+            <!-- Input Area -->
+            <div class="p-6">
+                <div class="max-w-3xl mx-auto relative glass rounded-2xl shadow-xl p-2 flex gap-2 items-end">
+                    <textarea id="chatInput" rows="1" placeholder="問點什麼..."
+                        class="flex-1 bg-transparent border-none focus:ring-0 text-slate-700 placeholder:text-slate-400 resize-none py-3 px-3 max-h-32 text-sm"></textarea>
+
+                    <button onclick="app.sendMessage()" id="sendBtn"
+                        class="p-2 mb-1 bg-blue-600 hover:bg-blue-700 text-white rounded-xl shadow-lg shadow-blue-500/30 transition-all disabled:opacity-50 disabled:cursor-not-allowed">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                            <path
+                                d="M10.894 2.553a1 1 0 00-1.788 0l-7 14a1 1 0 001.169 1.409l5-1.429A1 1 0 009 15.571V11a1 1 0 112 0v4.571a1 1 0 00.725.962l5 1.428a1 1 0 001.17-1.408l-7-14z" />
+                        </svg>
+                    </button>
+                </div>
+                <p class="text-center text-[10px] text-slate-400 mt-2">AI 模型可能會犯錯，請以官方教材為準。</p>
+            </div>
+        </div>
+    </main>
+
+    <!-- App Logic -->
+    <script>
+        // DATA
+        const SUBJECTS = {
+            subject1: {
+                title: "科目1：應用規劃",
+                color: "blue",
+                markdown: `# 科目1: 人工智慧技術應用規劃
+
+## 1. AI 基礎認知
+- **人工智慧定義**: 模擬人類智慧的電腦系統
+- **發展歷程**: 
+  - 規則式 AI -> 機器學習 -> 深度學習
+- **強/弱 AI**:
+  - Weak AI: 專注單一任務 (如 AlphaGo)
+  - Strong AI: 具備人類般通用智慧 (尚未實現)
+- **生成式 AI (GenAI)**: LLM, Diffusion Models
+
+## 2. AI 專案規劃流程
+- **需求訪談與問題定義**:
+  - 了解痛點 (Pain Points)
+  - SMART 原則設定目標
+- **可行性評估 (Feasibility)**:
+  - 技術可行性
+  - 數據可用性
+  - 經濟效益 (ROI)
+- **專案階段**:
+  - POC (概念驗證)
+  - Pilot (試點)
+  - Production (正式上線)
+
+## 3. 法律、倫理與風險
+- **隱私保護**:
+  - 去識別化 (De-identification)
+  - 歐盟 GDPR / 台灣個資法
+- **AI 倫理**:
+  - 公平性 (Fairness): 避免演算法偏見
+  - 可解釋性 (Explainability/XAI)
+  - 透明度
+- **資安風險**: 對抗式攻擊 (Adversarial Attacks)
+
+## 4. 領域應用案例
+- **智慧製造**: 預防性維護 (PdM), 瑕疵檢測 (AOI)
+- **智慧金融**: 信用評分, 詐欺偵測, 智能客服
+- **智慧醫療**: 醫學影像分析, 藥物開發
+- **智慧零售**: 推薦系統, 需求預測`
+            },
+            subject2: {
+                title: "科目2：大數據分析",
+                color: "green",
+                markdown: `# 科目2: 大數據處理分析與應用
+
+## 1. 資料工程架構
+- **資料類型**:
+  - 結構化 (Structured): 表格, SQL
+  - 半結構化 (Semi-structured): JSON, XML, Log
+  - 非結構化 (Unstructured): 文字, 影像, 音訊
+- **大數據特徵 (5V)**:
+  - Volume (量), Velocity (速), Variety (樣), Veracity (真), Value (值)
+- **資料儲存**:
+  - 關聯式資料庫 (RDBMS)
+  - NoSQL (MongoDB, Cassandra)
+  - Data Warehouse (倉儲) vs Data Lake (湖)
+
+## 2. 資料前處理 (Data Preprocessing)
+- **資料清洗 (Cleaning)**:
+  - 缺失值 (Missing Data): 刪除、平均補值、插值
+  - 離群值 (Outliers): 盒鬚圖偵測、Z-Score
+- **資料轉換**:
+  - 正規化 (Normalization): 0-1 scaling
+  - 標準化 (Standardization): Z-score scaling
+  - One-Hot Encoding (獨熱編碼)
+
+## 3. 探索式資料分析 (EDA)
+- **統計指標**:
+  - 集中趨勢: 平均數, 中位數, 眾數
+  - 離散程度: 標準差, 變異數, 四分位距 (IQR)
+- **關聯分析**: Pearson 相關係數 (-1 ~ 1)
+
+## 4. 資料視覺化 (Visualization)
+- **比較**: 長條圖 (Bar Chart)
+- **分佈**: 直方圖 (Histogram), 盒鬚圖 (Box Plot)
+- **關聯**: 散佈圖 (Scatter Plot)
+- **組成**: 圓餅圖 (Pie Chart)
+- **工具**: Matplotlib, Seaborn, Tableau, PowerBI`
+            },
+            subject3: {
+                title: "科目3：機器學習",
+                color: "purple",
+                markdown: `# 科目3: 機器學習技術與應用
+
+## 1. 機器學習流程 (ML Pipeline)
+- **資料收集與標註**: Labeling
+- **特徵工程**: Feature Selection, Dimensionality Reduction
+- **模型訓練**: Training / Validation
+- **模型測試與部署**: Testing / Deployment
+
+## 2. 學習演算法分類
+- **監督式學習 (Supervised)**:
+  - *迴歸 (Regression)*: 預測連續數值 (房價, 溫度)
+    - Linear Regression
+  - *分類 (Classification)*: 預測類別 (貓/狗, 垃圾郵件)
+    - Decision Tree, Random Forest
+    - SVM (支援向量機)
+    - Logistic Regression
+- **非監督式學習 (Unsupervised)**:
+  - *分群 (Clustering)*: K-Means, DBSCAN
+  - *降維 (Dimensionality Reduction)*: PCA (主成分分析)
+- **強化學習 (Reinforcement)**: Agent, Environment, Reward
+
+## 3. 深度學習 (Deep Learning)
+- **基礎架構**: Perceptron, MLP (多層感知機)
+- **CNN (卷積神經網路)**:
+  - 應用: 影像辨識 (Image Recognition)
+  - 結構: Convolution Layer, Pooling Layer
+- **RNN (循環神經網路)**:
+  - 應用: 自然語言處理 (NLP), 時間序列
+  - 變體: LSTM, GRU
+- **Transformer**: Attention Mechanism, BERT, GPT
+
+## 4. 模型評估指標
+- **分類指標**:
+  - 混淆矩陣 (Confusion Matrix): TP, TN, FP, FN
+  - Accuracy (準確率)
+  - Precision (精確率) vs Recall (召回率)
+  - F1-Score (調和平均)
+  - ROC Curve / AUC
+- **迴歸指標**:
+  - MSE (均方誤差)
+  - RMSE
+  - MAE (平均絕對誤差)
+- **常見問題**:
+  - Overfitting (過度擬合): 訓練好但測試差 -> Regularization, Dropout
+  - Underfitting (低度擬合): 模型太簡單 -> 增加特徵, 加深模型`
+            }
+        };
+
+        // CORE APP
+        const app = {
+            currentSubject: 'subject1',
+            currentTab: 'map',
+            apiKey: localStorage.getItem('gemini_key') || '',
+            mm: null,
+            selectedNode: null,
+            fileData: null,
+
+            init() {
+                // UI Init
+                this.updateAuthUI();
+                this.switchSubject('subject1');
+
+                // Load Model Preference
+                const savedModel = localStorage.getItem('gemini_model') || 'gemini-2.5-flash';
+                const modelInput = document.getElementById('modelInput');
+                modelInput.value = savedModel;
+
+                // Listeners
+                document.getElementById('saveKeyBtn').addEventListener('click', () => this.saveKey());
+                document.getElementById('apiKeyInput').addEventListener('keypress', (e) => {
+                    if (e.key === 'Enter') this.saveKey();
+                });
+
+                document.getElementById('pdfUploader').addEventListener('change', (e) => {
+                    this.handleFileUpload(e.target.files[0]);
+                });
+
+                document.getElementById('modelInput').addEventListener('change', (e) => {
+                    localStorage.setItem('gemini_model', e.target.value.trim());
+                });
+
+                const chatInput = document.getElementById('chatInput');
+                chatInput.addEventListener('input', function () {
+                    this.style.height = 'auto';
+                    this.style.height = (this.scrollHeight) + 'px';
+                });
+                chatInput.addEventListener('keypress', (e) => {
+                    if (e.key === 'Enter' && !e.shiftKey) {
+                        e.preventDefault();
+                        this.sendMessage();
+                    }
+                });
+
+                document.addEventListener('click', (e) => {
+                    const menu = document.getElementById('nodeContextMenu');
+                    if (!menu.contains(e.target) && !e.target.closest('.markmap-node')) {
+                        this.hideContextMenu();
+                    }
+                });
+
+                // Auto Start Tour if no key
+                setTimeout(() => {
+                    if (!this.apiKey) {
+                        this.startTour();
+                    }
+                }, 1000);
+            },
+
+            startTour() {
+                if (this.tour) this.tour.complete();
+
+                this.tour = new Shepherd.Tour({
+                    useModalOverlay: true,
+                    defaultStepOptions: {
+                        classes: 'shadow-md bg-purple-dark',
+                        scrollTo: true
+                    }
+                });
+
+                this.tour.addStep({
+                    id: 'intro',
+                    text: '歡迎使用 AI 智慧學習中心！讓我帶你快速導覽。',
+                    attachTo: { element: '#sidebar', on: 'right' },
+                    buttons: [{ text: '下一步', action: () => this.tour.next() }]
+                });
+
+                this.tour.addStep({
+                    id: 'api-key',
+                    text: '首先，在這裡輸入你的 Gemini API Key。這是使用 AI 功能的必要條件。<br><a href="https://aistudio.google.com/app/apikey" target="_blank" class="text-blue-500 underline">取得 API Key</a>',
+                    attachTo: { element: '#apiKeySection', on: 'right' },
+                    buttons: [{ text: '上一步', action: () => this.tour.back() }, { text: '下一步', action: () => this.tour.next() }]
+                });
+
+                this.tour.addStep({
+                    id: 'subjects',
+                    text: '切換不同的考科，右側的知識地圖會隨之更新。',
+                    attachTo: { element: '#subjectNav', on: 'right' },
+                    buttons: [{ text: '上一步', action: () => this.tour.back() }, { text: '下一步', action: () => this.tour.next() }]
+                });
+
+                this.tour.addStep({
+                    id: 'upload',
+                    text: '最重要的步驟：<b>上傳該科目的 PDF 學習指引</b>。AI 會讀取內容並根據文件回答你的問題。',
+                    attachTo: { element: '#uploadSection', on: 'right' },
+                    buttons: [{ text: '上一步', action: () => this.tour.back() }, { text: '下一步', action: () => this.tour.next() }]
+                });
+
+                this.tour.addStep({
+                    id: 'map',
+                    text: '試著點擊地圖上的<b>任何文字節點</b>，可以叫 AI 直接解釋該概念或出題考你！',
+                    attachTo: { element: '#markmap-container', on: 'left' },
+                    buttons: [{ text: '了解了，開始學習！', action: () => this.tour.complete() }]
+                });
+
+                this.tour.start();
+            },
+
+            saveKey() {
+                const input = document.getElementById('apiKeyInput');
+                if (input.value.trim().length > 10) {
+                    this.apiKey = input.value.trim();
+                    localStorage.setItem('gemini_key', this.apiKey);
+                    this.updateAuthUI();
+                } else {
+                    alert('請輸入有效的 API Key');
+                }
+            },
+
+            updateAuthUI() {
+                const input = document.getElementById('apiKeyInput');
+                const status = document.getElementById('keyStatus');
+                const uploader = document.getElementById('pdfUploader');
+
+                if (this.apiKey) {
+                    input.value = '';
+                    input.placeholder = '•••••••••••••••• (已儲存)';
+                    status.textContent = 'API Key 已就緒 ✅';
+                    status.className = 'text-[10px] text-green-500 mt-1 pl-1';
+                    uploader.disabled = false;
+                    document.getElementById('uploadText').textContent = '點擊上傳 PDF';
+                } else {
+                    uploader.disabled = true;
+                    document.getElementById('uploadText').textContent = '請先設定 API Key';
+                }
+            },
+
+            switchSubject(id) {
+                this.currentSubject = id;
+                document.querySelectorAll('nav button').forEach(btn => {
+                    btn.classList.remove('bg-blue-50', 'bg-green-50', 'bg-purple-50', 'border-blue-200', 'border-green-200', 'border-purple-200', 'shadow-sm');
+                });
+                const activeBtn = document.getElementById(`nav-${id}`);
+                const color = SUBJECTS[id].color;
+                activeBtn.classList.add(`bg-${color}-50`, `border-${color}-200`, 'shadow-sm');
+
+                this.renderMap(SUBJECTS[id].markdown);
+                this.fileData = null;
+                document.getElementById('fileStatus').classList.add('hidden');
+            },
+
+            switchTab(tab) {
+                this.currentTab = tab;
+                document.getElementById('view-map').classList.toggle('hidden', tab !== 'map');
+                document.getElementById('view-chat').classList.toggle('hidden', tab !== 'chat');
+
+                const btnMap = document.getElementById('tab-map');
+                const btnChat = document.getElementById('tab-chat');
+
+                if (tab === 'map') {
+                    btnMap.classList.add('bg-blue-100', 'text-blue-700', 'shadow-sm');
+                    btnMap.classList.remove('text-slate-600', 'hover:bg-white/50');
+                    btnChat.classList.remove('bg-blue-100', 'text-blue-700', 'shadow-sm');
+                    btnChat.classList.add('text-slate-600', 'hover:bg-white/50');
+                } else {
+                    btnChat.classList.add('bg-blue-100', 'text-blue-700', 'shadow-sm');
+                    btnChat.classList.remove('text-slate-600', 'hover:bg-white/50');
+                    btnMap.classList.remove('bg-blue-100', 'text-blue-700', 'shadow-sm');
+                    btnMap.classList.add('text-slate-600', 'hover:bg-white/50');
+                    document.getElementById('chatBadge').classList.add('hidden');
+                }
+            },
+
+            renderMap(markdown) {
+                const { Markmap, Transformer } = window.markmap;
+                const transformer = new Transformer();
+                const { root } = transformer.transform(markdown);
+
+                if (this.mm) {
+                    this.mm.setData(root);
+                    this.mm.fit();
+                } else {
+                    this.mm = Markmap.create('#markmap', {
+                        embedGlobalCSS: true, scrollForPan: true, zoom: true,
+                    }, root);
+                }
+
+                setTimeout(() => {
+                    const nodes = document.querySelectorAll('.markmap-node');
+                    nodes.forEach(node => {
+                        node.style.cursor = 'pointer';
+                        node.onclick = (e) => {
+                            e.stopPropagation();
+                            const text = node.textContent;
+                            this.showContextMenu(e.pageX, e.pageY, text);
+                        };
+                    });
+                }, 500);
+            },
+
+            showContextMenu(x, y, text) {
+                this.selectedNode = text;
+                const menu = document.getElementById('nodeContextMenu');
+                document.getElementById('selectedNodeTitle').textContent = text.substring(0, 20) + (text.length > 20 ? '...' : '');
+                menu.classList.remove('hidden');
+                requestAnimationFrame(() => {
+                    menu.classList.remove('scale-95', 'opacity-0');
+                    menu.classList.add('scale-100', 'opacity-100');
+                    menu.style.left = x + 'px';
+                    menu.style.top = y + 'px';
+                });
+            },
+
+            hideContextMenu() {
+                const menu = document.getElementById('nodeContextMenu');
+                menu.classList.add('scale-95', 'opacity-0');
+                menu.classList.remove('scale-100', 'opacity-100');
+                setTimeout(() => menu.classList.add('hidden'), 200);
+            },
+
+            async handleFileUpload(file) {
+                if (!file) return;
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    const base64Data = e.target.result.split(',')[1];
+                    this.fileData = {
+                        inlineData: {
+                            data: base64Data,
+                            mimeType: file.type // "application/pdf"
+                        }
+                    };
+                    document.getElementById('fileStatus').classList.remove('hidden');
+                    document.getElementById('uploadText').textContent = file.name;
+                    this.addChatMessage('system', `檔案 ${file.name} 已載入，您可以開始針對內容提問！`);
+                    this.switchTab('chat');
+                };
+                reader.readAsDataURL(file);
+            },
+
+            async sendMessage() {
+                const input = document.getElementById('chatInput');
+                const text = input.value.trim();
+                if (!text) return;
+                if (!this.apiKey) {
+                    alert('請先設定 API Key');
+                    this.startTour();
+                    return;
+                }
+                input.value = '';
+                input.style.height = 'auto';
+
+                this.addChatMessage('user', text);
+
+                // Create AI bubble placeholder
+                const aiBubbleId = 'ai-response-' + Date.now();
+                this.addChatMessage('ai', '<span class="animate-pulse">...</span>', aiBubbleId);
+
+                try {
+                    await this.streamGemini(text, aiBubbleId);
+                } catch (err) {
+                    const bubble = document.getElementById(aiBubbleId); // Find the bubble content div
+                    if (bubble) bubble.innerHTML += `<br><span class="text-red-500 text-xs">錯誤: ${err.message}</span>`;
+                }
+            },
+
+            async askAI(mode) {
+                this.hideContextMenu();
+                this.switchTab('chat');
+                let prompt = '';
+                if (mode === 'explain') {
+                    prompt = `請解釋「${this.selectedNode}」這個概念，特別是在 ${SUBJECTS[this.currentSubject].title} 的領域中。請用繁體中文回答，簡單易懂。`;
+                } else if (mode === 'quiz') {
+                    prompt = `針對「${this.selectedNode}」這主題，請出一題單選題考我，並附上答案解析。使用繁體中文。`;
+                }
+
+                this.addChatMessage('user', prompt);
+                const aiBubbleId = 'ai-response-' + Date.now();
+                this.addChatMessage('ai', '<span class="animate-pulse">...</span>', aiBubbleId);
+
+                try {
+                    await this.streamGemini(prompt, aiBubbleId);
+                } catch (err) {
+                    const bubble = document.getElementById(aiBubbleId);
+                    if (bubble) bubble.innerHTML += `<br><span class="text-red-500 text-xs">錯誤: ${err.message}</span>`;
+                }
+            },
+
+            async streamGemini(promptText, elementId) {
+                const { GoogleGenerativeAI } = document.querySelector('script[type="importmap"]').textContent
+                    ? { GoogleGenerativeAI: (await import('https://esm.run/@google/generative-ai')).GoogleGenerativeAI }
+                    : window;
+
+                const genAI = new GoogleGenerativeAI(this.apiKey);
+                const modelInput = document.getElementById('modelInput');
+                let modelName = modelInput.value.trim() || 'gemini-2.5-flash';
+
+                // Disable "Thinking" if supported by the API (though mostly handled by model selection)
+                // We use standard generation config, not requesting thinking config
+                const model = genAI.getGenerativeModel({
+                    model: modelName,
+                    generationConfig: {
+                        // thinking_config: { include_thoughts: false } // Hypothetical param if user meant API level
+                    }
+                });
+
+                const parts = [];
+                if (this.fileData) parts.push(this.fileData);
+                parts.push({ text: promptText });
+
+                const result = await model.generateContentStream(parts);
+
+                let fullText = '';
+                const bubbleContent = document.getElementById(elementId);
+
+                for await (const chunk of result.stream) {
+                    const chunkText = chunk.text();
+                    fullText += chunkText;
+                    // Render Markdown incrementally (simple approach: re-render full text)
+                    if (bubbleContent) bubbleContent.innerHTML = window.marked.parse(fullText);
+
+                    // Auto-scroll
+                    const history = document.getElementById('chatHistory');
+                    history.scrollTop = history.scrollHeight;
+                }
+            },
+
+            addChatMessage(role, text, elementId = null) {
+                const history = document.getElementById('chatHistory');
+                const div = document.createElement('div');
+                div.className = 'flex gap-4 ' + (role === 'user' ? 'flex-row-reverse' : '');
+
+                const avatar = document.createElement('div');
+                avatar.className = `w-8 h-8 rounded-full flex-shrink-0 flex items-center justify-center text-white font-bold text-xs ${role === 'user' ? 'bg-slate-500' : (role === 'system' ? 'bg-red-400' : 'bg-gradient-to-tr from-blue-500 to-purple-500')}`;
+                avatar.textContent = role === 'user' ? 'U' : (role === 'system' ? '!' : 'AI');
+
+                const bubble = document.createElement('div');
+                bubble.className = `max-w-2xl rounded-2xl p-4 shadow-sm text-sm leading-relaxed border ${role === 'user' ? 'bg-blue-600 text-white rounded-tr-none border-blue-600' : 'bg-white rounded-tl-none text-slate-700 border-slate-100'}`;
+
+                if (elementId) bubble.id = elementId;
+
+                if (role === 'user') { bubble.textContent = text; }
+                else { bubble.innerHTML = window.marked.parse(text); }
+                div.appendChild(avatar);
+                div.appendChild(bubble);
+                history.appendChild(div);
+                history.scrollTop = history.scrollHeight;
+            },
+
+            showTypingIndicator() {
+                const history = document.getElementById('chatHistory');
+                const div = document.createElement('div');
+                div.id = 'typingIndicator';
+                div.className = 'flex gap-4';
+                div.innerHTML = `
+                    <div class="w-8 h-8 rounded-full bg-gradient-to-tr from-blue-500 to-purple-500 flex-shrink-0 flex items-center justify-center text-white font-bold text-xs">AI</div>
+                    <div class="bg-white rounded-2xl rounded-tl-none p-4 shadow-sm border border-slate-100 flex items-center gap-1">
+                        <div class="w-2 h-2 bg-slate-400 rounded-full typing-dot"></div>
+                        <div class="w-2 h-2 bg-slate-400 rounded-full typing-dot"></div>
+                        <div class="w-2 h-2 bg-slate-400 rounded-full typing-dot"></div>
+                    </div>`;
+                history.appendChild(div);
+                history.scrollTop = history.scrollHeight;
+            },
+
+            removeTypingIndicator() {
+                const el = document.getElementById('typingIndicator');
+                if (el) el.remove();
+            }
+        };
+        window.onload = () => app.init();
+    </script>
+</body>
+
+</html>
