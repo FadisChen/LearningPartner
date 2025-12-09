@@ -134,16 +134,6 @@
             display: flex;
             justify-content: center;
         }
-
-        /* Modal */
-        #zoomModal {
-            transition: opacity 0.3s ease;
-        }
-
-        #zoomModal svg {
-            max-width: 90vw;
-            max-height: 90vh;
-        }
     </style>
 </head>
 
@@ -225,13 +215,8 @@
                     <!-- Diagram -->
                     <div
                         class="glass-panel p-6 rounded-2xl mb-8 flex flex-col items-center bg-white/60 overflow-hidden relative group">
-                        <div id="mermaid-diagram" class="mermaid cursor-zoom-in" onclick="app.openZoomModal()"
-                            title="點擊放大">
+                        <div id="mermaid-diagram" class="mermaid">
                             <!-- Mermaid render here -->
-                        </div>
-                        <div
-                            class="text-[10px] text-slate-400 mt-2 opacity-50 group-hover:opacity-100 transition-opacity">
-                            👆 點擊圖片可放大檢視
                         </div>
                     </div>
 
@@ -286,22 +271,6 @@
             </div>
         </div>
     </main>
-
-    <!-- Zoom Modal -->
-    <div id="zoomModal"
-        class="fixed inset-0 z-[100] bg-black/80 hidden flex items-center justify-center p-4 backdrop-blur-sm"
-        onclick="app.closeZoomModal()">
-        <button class="absolute top-4 right-4 text-white hover:text-slate-300 p-2">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24"
-                stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-            </svg>
-        </button>
-        <div id="zoomContent" class="bg-white rounded-lg p-4 overflow-auto max-w-full max-h-full"
-            onclick="event.stopPropagation()">
-            <!-- Zoomed Image Here -->
-        </div>
-    </div>
 
     <script>
         // --- DATA ---
@@ -1199,7 +1168,8 @@ foreach (var day in new DaysOfTheWeek())
                 });
                 this.renderSidebar();
                 this.renderMarkmap();
-                // Select first pattern by default
+
+                // Default view
                 const firstPattern = DESIGN_PATTERNS.creational.items[0];
                 this.showDetail(firstPattern.id);
             },
@@ -1217,6 +1187,11 @@ foreach (var day in new DaysOfTheWeek())
 
             renderMarkmap() {
                 const markdown = this.generateMarkdown();
+                // Ensure markmap global is available
+                if (!window.markmap) {
+                    console.error('Markmap library not loaded');
+                    return;
+                }
                 const { Markmap, Transformer } = window.markmap;
                 const transformer = new Transformer();
                 const { root } = transformer.transform(markdown);
@@ -1234,34 +1209,61 @@ foreach (var day in new DaysOfTheWeek())
                         maxWidth: 300
                     }, root);
 
+                    // Delay to ensure SVG nodes are created before attaching listeners
                     setTimeout(() => {
                         this.attachNodeListeners();
-                    }, 500);
+                        this.markmap.fit();
+                    }, 800);
                 }
             },
 
             attachNodeListeners() {
-                const nodes = document.querySelectorAll('.markmap-node');
-                nodes.forEach(node => {
-                    node.style.cursor = 'pointer';
-                    node.onclick = (e) => {
-                        e.stopPropagation();
-                        const text = node.textContent.trim();
+                // Markmap renders nodes as <g> elements with class "markmap-node"
+                // The text is inside various levels of tspans or foreignObjects usually.
+                // We'll select common text containers.
+
+                // Newer Markmap versions render hierarchy differently. 
+                // We will try to find the text elements.
+                // Usually direct clicking might be intercepted by Markmap's own zoom/collapse handlers.
+                // We rely on the fact that we can attach to the `g` container typically.
+
+                const svg = document.querySelector('#markmap');
+                if (!svg) return;
+
+                // Markmap usually stops propagation, so we might need to capture.
+                // However, Markmap node clicking toggles fold usually.
+                // We want to detect the click payload.
+
+                // A robustness strategy: Listen on the SVG and find the target text.
+                svg.addEventListener('click', (e) => {
+                    // Check if target is a text or tspan inside a node
+                    let target = e.target;
+                    // Walk up to find if it was a node content
+                    // Markmap text usually resides in <tspan> inside <text> inside <g>
+
+                    // Helper: get text content if it looks like a pattern name
+                    const text = target.textContent.trim();
+                    if (text) {
                         this.handleNodeClick(text);
-                    };
+                    }
                 });
             },
 
             handleNodeClick(text) {
+                // console.log("Clicked:", text); 
                 let foundItem = null;
                 let foundCategory = null;
 
                 for (const [catKey, category] of Object.entries(DESIGN_PATTERNS)) {
-                    if (text.includes(category.name) || category.name.includes(text)) {
-                        return; // Clicked Category
+                    // Check strict or loose match
+                    if (text === category.name || category.name.includes(text) && text.length > 5) {
+                        return; // Clicked Category: do nothing or expand? Markmap handles expand.
                     }
                     // Match pattern name
-                    const item = category.items.find(i => i.name === text || text.includes(i.name.split(' ')[0]));
+                    // Pattern names are like "Singleton (單例模式)"
+                    // Clicked text might be "Singleton (單例模式)"
+                    const item = category.items.find(i => i.name === text || (text.length > 3 && i.name.includes(text)));
+
                     if (item) {
                         foundItem = item;
                         foundCategory = category;
@@ -1331,8 +1333,8 @@ foreach (var day in new DaysOfTheWeek())
 
                 // Highlight.js Fix
                 const codeBlock = document.getElementById('pattern-code');
-                delete codeBlock.dataset.highlighted; // Clear highlighted state
-                codeBlock.className = 'language-csharp'; // Reset class
+                delete codeBlock.dataset.highlighted;
+                codeBlock.className = 'language-csharp';
                 codeBlock.textContent = item.code;
                 hljs.highlightElement(codeBlock);
 
@@ -1366,27 +1368,6 @@ foreach (var day in new DaysOfTheWeek())
                     detailPanel.classList.remove('hidden');
                 }
                 if (this.markmap) setTimeout(() => this.markmap.fit(), 300);
-            },
-
-            openZoomModal() {
-                const modal = document.getElementById('zoomModal');
-                const content = document.getElementById('zoomContent');
-                const svg = document.querySelector('#mermaid-diagram svg');
-
-                if (svg) {
-                    content.innerHTML = '';
-                    const clone = svg.cloneNode(true);
-                    // Remove fixed width/height to let it scale
-                    clone.style.width = 'auto';
-                    clone.style.height = 'auto';
-                    clone.style.maxWidth = '100%';
-                    content.appendChild(clone);
-                    modal.classList.remove('hidden');
-                }
-            },
-
-            closeZoomModal() {
-                document.getElementById('zoomModal').classList.add('hidden');
             }
         };
 
