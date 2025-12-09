@@ -1,0 +1,1021 @@
+const SUBJECTS = {
+    subject1: {
+        title: "科目1：應用規劃",
+        color: "blue",
+        markdown: `# 人工智慧技術應用規劃
+
+## AI 相關技術應用
+
+### 自然語言處理技術與應用 (L21101)
+-   定義：使機器理解、解釋並生成人類語言
+-   技術涵蓋：文本分類、情感分析、命名實體辨識 (NER)、機器翻譯
+-   應用：搜索引擎、情感分析、智慧客服、醫療診斷、法律文本分析
+-   **2. NLP 基礎概念與發展脈絡**
+    -   **(1) 定義與範疇**
+        -   自然語言處理 (NLP)：使電腦「理解、處理並產生」自然語言的核心 AI 技術
+        -   目標：人機溝通、自動化知識擷取、語言智慧創作
+        -   核心任務層次
+            -   理解 (Understand)：解析語法結構與語意，辨識意圖、情緒與知識
+            -   處理 (Process)：將語言轉換為電腦可操作的結構 (如特徵向量、語法樹)
+            -   生成 (Generate)：根據情境與目標，自動產出自然、流暢且具邏輯的文字或語音
+        -   關鍵子領域
+            -   自然語言理解 (NLU)：專注於機器如何「理解」人類語言
+            -   自然語言生成 (NLG)：專注於機器如何「產生」自然語言
+    -   **(2) 技術演進脈絡**
+        -   A. 第一階段：規則式方法 (1980s–1990s)
+            -   描述/優勢：依賴語言學家與工程師手工編寫語法規則與詞彙辭典，高可解釋性
+            -   限制：依賴專家知識，擴展性差，維護成本高
+            -   代表技術/模型：ELIZA、專家系統
+        -   B. 第二階段：統計語言模型 (1990s–2010s)
+            -   描述/優勢：依靠大量語料訓練機率模型，自動學習語言統計結構，靈活性高
+            -   限制：缺乏語意深度理解，依賴大量標註資料，難捕捉長距離依賴性
+            -   代表技術/模型：N-gram、隱馬可夫模型 (HMM)、條件隨機場 (CRF)
+        -   C. 第三階段：深度學習時代 (2010s)
+            -   描述/優勢：廣泛應用神經網路，有效捕捉長距離依賴關係，特徵提取能力強
+            -   限制：需大量計算資源和數據，訓練時間長，不適用小資料集
+            -   代表技術/模型：循環神經網路 (RNN)、長短期記憶網路 (LSTM)、門控循環單元 (GRU)
+        -   D. 第四階段：預訓練語言模型 (2018–至今)
+            -   描述/優勢：Transformer 架構徹底改變 NLP，自注意力機制實現全局語境建模，並行處理數據，提高計算效率
+            -   代表技術/模型：Transformer、BERT、GPT、RoBERTa、T5、PaLM
+-   **3. NLP 前處理**
+    -   目的：確保資料品質、計算效率與最終成效
+    -   常見技術
+        -   分詞 (Tokenization)：將文字拆解為基本單位 (單字、詞組、子詞)
+        -   詞性標注 (POS Tagging)：標記每個詞的語法角色 (名詞、動詞、形容詞)
+        -   詞形還原 (Lemmatization) 與 詞幹提取 (Stemming)：文字正規化
+            -   詞形還原：保留語意，還原為字典形式
+            -   詞幹提取：速度快，但可能失去部分語意
+        -   停用詞移除 (Stopword Removal)：去除語意貢獻低的高頻詞
+-   **4. NLP 關鍵技術與常用模型**
+    -   **(1) NLP 關鍵技術發展**
+        -   詞彙向量化/文字表示學習：將文字轉換為向量或張量，供機器學習模型計算處理
+        -   **詞彙表示術語**
+            -   A. 語境型表示與非語境型表示
+                -   語境型表示 (Contextual Representation)：詞向量隨上下文動態改變，解決多義詞問題 (BERT, ELMo)
+                -   非語境型表示 (Non-contextual Representation)：詞向量在所有語境中保持不變 (Word2Vec, GloVe)
+            -   B. 分布式表示與非分布式表示
+                -   分布式表示 (Distributed Representation)：詞向量根據語料庫中其他詞彙的關聯學習 (Word2Vec)
+                -   非分布式表示 (Non-distributed Representation)：每個詞映射到獨立固定向量 (One-hot Encoding)
+            -   C. 詞嵌入 (Word Embedding)
+                -   One-hot Encoding：最基本表示法，向量稀疏，無法捕捉語意關聯
+                -   Bag of Words (BoW)：不考慮詞序，計算詞彙出現頻率
+                -   tf-idf：衡量詞彙在單一文件中的重要性與在整體語料庫中的罕見程度
+                -   N-grams：連續 N 個詞組成的特徵單位，保留詞彙序列與語法結構
+                -   分布式詞嵌入：學習詞彙語意關聯，將語意相近詞映射到向量空間
+                    -   Word2Vec：CBOW (上下文預測中心詞) 和 Skip-gram (中心詞預測上下文)
+                    -   GloVe：結合統計共現資訊與詞嵌入學習
+                    -   FastText：將詞視為子詞集合，處理未見過的詞 (OOV)
+                -   語境型詞嵌入：詞向量隨語境動態生成，解決多義詞與語意變化
+                    -   ELMo：基於雙向 LSTM，學習語境敏感詞向量
+                    -   BERT：雙向 Transformer 編碼器，遮蔽語言模型 (MLM)
+                    -   GPT：自迴歸預測為核心，擅長文字生成
+    -   **(2) 深度學習在 NLP 中的應用**
+        -   傳統序列模型：RNN、LSTM、GRU (處理時間序列資料)
+        -   Transformer 架構：自注意力機制 (Self-Attention)，解決長距離依賴，提升並行計算
+        -   Encoder-Decoder 架構：廣泛應用於序列轉換任務
+        -   全平行架構：訓練速度大幅提升，適合 GPU/TPU 運行
+    -   **(3) 預訓練語言模型**
+        -   策略：預訓練再微調 (Pre-train and Fine-tune)
+        -   常見代表模型：BERT (理解類任務)、GPT (生成任務)
+        -   Prompt-based 方法與小樣本學習：任務轉化為填空或問答，降低訓練資料需求
+        -   模型應用強化與高效微調技術：檢索增強生成 (RAG)、低秩自適應 (LoRA)
+-   **5. NLP 應用情境與實務案例**
+    -   文字分類：垃圾郵件偵測、商品評論分類、客戶服務請求分類
+    -   情感分析：社群輿情監控、顧客滿意度調查
+    -   對話系統 (Chatbot)：任務導向對話系統、開放式對話系統 (ChatGPT)
+    -   文字生成與總結：新聞摘要工具、廣告標題生成、自動報表生成
+    -   機器翻譯：商業文件翻譯、客服支援、文化交流與教育
+    -   其他應用：命名實體辨識 (NER)、關係抽取 (Relation Extraction)
+-   **6. NLP 技術挑戰與風險**
+    -   資料層風險：資料隱私、標註與品質風險、資料授權與版權風險
+    -   模型層風險：模型偏見、公平性評估不足
+    -   應用層風險：語意理解限制、部署與維運風險、生成內容風險 (模型幻覺)
+
+### 電腦視覺技術與應用 (L21102)
+-   定義：使機器具備「視覺理解能力」，從影像或影片中擷取、辨識並解釋語意資訊
+-   技術整合：影像處理、模式辨識、機器學習、深度學習
+-   發展趨勢：深度學習、生成式 AI、多模態學習的整合
+-   **2. CV 基礎概念與發展脈絡**
+    -   **(1) 定義與範疇**
+        -   電腦視覺 (CV)：使機器具備「視覺理解能力」的 AI 領域
+        -   核心目標：從靜態影像或動態影片中擷取、辨識並解釋語意資訊
+        -   任務類型：影像分類、物件偵測、語意分割、實例分割、影像生成與合成
+    -   **(2) 技術演進脈絡**
+        -   早期時期 (1980s–2010)：特徵工程主導 (邊緣偵測、特徵點偵測、色彩與紋理分析)
+        -   深度學習興起 (2012–2020)：CNN 革命 (AlexNet、VGGNet、ResNet)
+        -   多模態與生成式 AI 融合 (2020–至今)：CLIP、Vision Transformer (ViT)、DALL·E、Stable Diffusion、Midjourney、SAM
+-   **3. 影像標註與資料前處理**
+    -   **(1) 影像標註 (Image Annotation)**
+        -   定義：對圖像中的物件、區域或屬性進行人工或自動資料標註
+        -   常見標註方式：類別標籤 (Label)、邊界框 (Bounding Box)、像素分割標籤、像素遮罩 + 實例 ID、身體節點或特定點位座標、區塊框選 + 文字內容 (OCR)
+        -   進階標註方法：語意與實例分割深度結合、自動化標註技術 (Auto-labeling)、半監督式學習與主動學習
+        -   標註準則：一致性、細節與準確度、品質控制 (雙重標註)
+    -   **(2) 影像資料前處理 (Preprocessing for Image Data)**
+        -   目的：統一資料格式、增強資料品質、提升模型訓練效率
+        -   常見步驟：圖像尺寸處理、正規化處理、像素增強、噪聲去除、色彩空間轉換、資料擴增、序列統一
+        -   進階處理技術：資料清洗、資料分層抽樣、圖像編碼
+-   **4. CV 關鍵技術與常用模型**
+    -   **(1) 影像分類 (Image Classification)**
+        -   目的：將一張影像歸類為一個或多個類別
+        -   基礎流程：資料收集與標註、資料預處理、模型選擇、訓練與評估
+        -   CNN 在特徵提取的優勢與限制：自動學習影像特徵，但訓練時間長、需大量數據
+        -   知名 CNN 模型架構：LeNet、AlexNet、VGG、ResNet
+    -   **(2) 物件偵測 (Object Detection)**
+        -   目的：同時進行物體的定位與分類
+        -   常見模型：YOLO (You Only Look Once)、Faster R-CNN、SSD (Single Shot Multibox Detector)
+        -   應用場合：人臉辨識、車牌辨識、工業瑕疵檢測
+    -   **(3) 影像分割 (Image Segmentation)**
+        -   目的：將影像中每個像素分配至特定類別
+        -   類型：語意分割 (Semantic Segmentation)、實例分割 (Instance Segmentation)
+        -   常見的分割模型：FCN (Fully Convolutional Network)、U-Net、Mask R-CNN
+        -   準確度指標：IOU (Intersection over Union)
+-   **5. CV 應用情境與實務案例**
+    -   **(1) 監控與安全 (Surveillance & Security)**
+        -   A. 人臉辨識系統
+        -   B. 車牌辨識系統 (ANPR)
+        -   C. 隱私與合規管理：遵守 GDPR、HIPAA 等法規，處理模型偏見
+        -   D. 即時推論 (Real-time Inference)
+    -   **(2) 醫療影像診斷 (Medical Imaging)**
+        -   A. 影像分類：提升診斷效率
+        -   B. 影像分割：精確定位病灶區域
+        -   C. 醫療數據與標註需求
+        -   D. 醫療隱私法規
+    -   **(3) 智慧製造與零售 (Smart Manufacturing & Retail)**
+        -   A. 工業瑕疵偵測 (Industrial Defect Detection)
+        -   B. 商品行為分析 (Product Behavior Analysis)
+        -   C. 邊緣運算與即時回饋機制
+        -   D. 顧客行為追蹤 (Customer Behavior Tracking)
+    -   **(4) 其他應用**
+        -   A. 擴增實境 (AR) 與虛擬實境 (VR)
+        -   B. 自動駕駛 (Autonomous Driving)
+-   **6. CV 技術挑戰與風險**
+    -   **(1) 資料隱私與合規**
+        -   A. 隱私議題的核心挑戰：個人識別資料 (PII) 處理、人臉辨識資料、敏感影像資料
+        -   B. 常見合規做法與因應策略：資料匿名化與去識別化、合法授權、資料保存與刪除政策
+        -   C. 社會與倫理爭議：安全防護與個人隱私的平衡
+    -   **(2) 偏見 (Bias) 與模型可靠度**
+        -   A. 電腦視覺模型中的偏見問題：資料來源不平衡、標註偏誤、拍攝條件偏差
+        -   B. 模型失準對實務應用的影響：誤檢 (False Positive)、漏檢 (False Negative)
+        -   C. 提升模型公平性與可靠度的做法：偏見診斷測試、數據平衡與重加權技術、可信度評估指標
+    -   **(3) 部署與維運風險**
+        -   A. 資源需求與運算負荷：GPU/TPU 資源限制、批次處理延遲
+        -   B. 系統維運與升級風險：演算法版本管理困難、資料漂移 (Data Drift)、部署測試不足
+        -   C. 解決策略：實施 MLOps 流程、影像品質監測、預設容錯與回退機制
+
+### 生成式 AI 技術與應用 (L21103)
+-   定義：能夠生成全新內容的 AI 技術
+-   AI 演進階段：感知 AI → 生成式 AI → 代理式 AI → 物理 AI
+-   技術基礎：大規模預訓練模型、深度神經網路、跨模態學習、強化式學習、提示工程
+-   **2. 生成式 AI 基礎概念與演進脈絡**
+    -   **(1) 定義與範疇**
+        -   生成式 AI：根據輸入訊息產生全新內容
+        -   與鑑別式 AI 比較：生成式 AI 強調創造性，鑑別式 AI 強調分類、辨識或預測
+        -   應用類型：文本生成、圖像生成、音訊生成、影片生成、多模態生成
+    -   **(2) 技術演進脈絡**
+        -   初期階段 (2013–2015)：編碼器-解碼器模型與變分自編碼器 (VAE, RNN)
+        -   GAN 時代 (2014–2020)：對抗生成網路 (GAN)
+        -   Transformer 崛起 (2017 年起)：自注意力機制，催生大型語言模型 (LLM)
+        -   擴散模型與多模態生成 (2020 年起)：Diffusion Models、Multimodal Models
+        -   巨型模型與 Agent 化發展 (2023 年至今)：GPT-4、Gemini、Claude 2
+-   **3. 生成式 AI 常見模型與工具**
+    -   **(1) 文本生成**
+        -   目的：根據提示 (Prompt) 生成語意通順、邏輯合理的自然語言文本
+        -   A. 常見工具/平台：GPT 系列、ChatGPT、Claude、Gemini、開源模型 (LLaMA, Mistral)
+        -   B. 應用情境示例：自動化客服、電子郵件撰寫、法律/醫療文書草擬、程式碼補全、教學內容生成
+        -   C. 挑戰與關鍵指標：內容真實性與一致性 (避免幻覺 Hallucination)、長文本邏輯連貫性；BLEU、ROUGE、人工評估
+    -   **(2) 圖像生成**
+        -   目的：根據自然語言提示，創造高解析度、具風格性的圖像
+        -   A. 常見模型：Diffusion Models (Stable Diffusion, DALL·E 2, Imagen)、GAN (StyleGAN, BigGAN)、ControlNet/InstructPix2Pix
+        -   B. 常見工具與平台：Midjourney、Stable Diffusion WebUI、Adobe Firefly、Canva AI
+        -   C. 應用情境：品牌視覺設計、社群圖文素材、遊戲角色與場景創作、影片預視化、藝術風格模仿
+    -   **(3) 語音合成 (Voice Synthesis)**
+        -   目的：將文字輸入轉換為自然語音輸出 (Text-to-Speech, TTS)
+        -   A. 常用模型：Tacotron 2 與 FastSpeech 2、VITS、Whisper
+        -   B. 常見工具與平台：ElevenLabs、Microsoft Azure TTS、Google Cloud TTS、Amazon Polly
+        -   C. 應用情境：電子學習平台語音教材、有聲書製作、遊戲角色語音、虛擬偶像與動畫配音、語音客服、智慧家居語音控制
+        -   D. 挑戰：情感表達自然度、多語言適應性、倫理風險 (語音複製)
+        -   E. 關鍵指標：MOS (Mean Opinion Score)、WER (Word Error Rate)、生成延遲
+-   **4. 生成式 AI 風險與未來趨勢**
+    -   **(1) 潛在風險與挑戰**
+        -   A. 內容真偽與資訊可信度問題
+        -   B. 智慧財產權與授權爭議
+        -   C. 偏見放大與倫理風險
+        -   D. 深偽 (Deepfake) 技術濫用
+        -   E. 可控性與輸出結果不確定性
+    -   **(2) 技術發展趨勢**
+        -   A. 多模態生成的崛起
+        -   B. 可控生成與提示工程深化
+        -   C. 小型化與邊緣部署模型的興起
+        -   D. 模型對齊與安全防護機制進化
+        -   E. 法規制定與全球治理機制成形
+
+### 多模態人工智慧應用 (L21104)
+-   定義：能同時處理並整合來自不同模態 (文字、影像、語音、感測訊號) 的資料
+-   優勢：處理複雜情境、多源資訊判斷與人機互動中展現更高彈性與準確性
+-   **2. 多模態 AI 基礎概念與演進脈絡**
+    -   **(1) 定義與範疇**
+        -   多模態 AI：能同時處理兩種以上不同資料模態的 AI 系統
+        -   常見資料模態：文字、影像、語音/音訊、感測器資料
+        -   核心技術：跨模態表示學習 (Cross-modal Embeddings)，將不同模態資料映射至相同的語意空間 (CLIP)
+    -   **(2) 技術演進脈絡**
+        -   A. 早期階段：特徵拼接與簡單融合策略
+        -   B. 深度學習階段：模態專屬網路與融合層設計
+        -   C. 當前階段：Transformer 與自注意力驅動的統一架構
+-   **3. 多模態 AI 常見模型與工具**
+    -   **(1) CLIP：圖文對齊與對比學習基礎**
+        -   功能與應用：圖文匹配、圖文檢索、圖片標題生成
+        -   優勢：零樣本 (Zero-shot) 學習能力強
+        -   限制：對複雜情境的細節理解有限，訓練資料偏見影響公平性
+    -   **(2) 語音模態的整合與應用**
+        -   核心流程：語音辨識 (ASR) → 自然語言理解 (NLU) → 任務執行與回應 → 生成語音回饋 (TTS)
+        -   應用情境：語音助理、語音搜尋、客服系統、跨語言互動
+    -   **(3) 感測資料的多模態融合**
+        -   依賴技術：感測融合 (Sensor Fusion)，資料同步與特徵對齊
+        -   應用情境：智慧城市 (環境監測、交通堵塞)、智慧醫療 (醫學影像、生命徵象)、自動駕駛與機器人
+        -   挑戰：資料同步、模型複雜度
+    -   **(4) 常見模型**
+        -   A. BLIP / BLIP-2：強化圖文問答與生成任務
+        -   B. Flamingo：具少樣本學習能力，快速適應新圖文任務
+        -   C. M3AE：基於遮罩預訓練的多模態自編碼器
+-   **4. 多模態 AI 應用情境**
+    -   **(1) 醫療領域：診斷與決策支持**
+        -   應用示例：影像病灶判別與診斷摘要、跨資料來源分析病患狀況
+        -   挑戰與指標：資料隱私、異質資料同步性、模型解釋性不足；診斷準確率、假陽性率
+    -   **(2) 零售與顧客行為分析**
+        -   應用示例：分析顧客動線與停留時間、利用自然語言處理分析評論情感、建立多模態資料可視化平台
+        -   挑戰與指標：顧客隱私保護、多源資料噪聲、即時處理需求；推薦準確率、動線分析的 IOU、情感分析的 F1 分數
+    -   **(3) 虛實整合互動與沉浸式應用**
+        -   應用示例：虛擬人偶 (Avatar) 根據語音與手勢回應、整合視覺與語音控制的數位助理
+        -   挑戰與指標：系統延遲、跨模態一致性、運算資源需求；回應延遲、語音辨識的 WER、姿勢辨識的準確率
+-   **5. 多模態 AI 風險與未來趨勢**
+    -   **(1) 資料對齊與標註**
+        -   挑戰：不同模態資料時間軸或語意同步、多模態標註成本高昂、高品質標註資料稀缺
+        -   解決策略：時序對齊演算法、弱監督學習或生成模型自動標註、建立分散式儲存系統
+    -   **(2) 運算與部署**
+        -   挑戰：訓練過程需大量 GPU/TPU 資源、部署至邊緣設備需維持效能、雲端部署延遲與隱私疑慮
+        -   解決策略：模型優化 (LoRA)、混合部署、硬體加速 (NVIDIA TensorRT)
+    -   **(3) 隱私與法規**
+        -   挑戰：敏感資料未經加密或匿名化、模型可能被攻擊或誤用、MLOps 流程缺乏安全審查
+        -   解決策略：資料保護 (匿名化、端到端加密)、模型安全 (對抗訓練、內容檢測)、法規遵循
+    -   **(4) 未來趨勢**
+        -   A. 統一架構的發展
+        -   B. 即時與低資源環境部署
+        -   C. 自主學習與自我監督機制
+        -   D. 與代理式 AI 的整合
+        -   E. 法規與倫理框架的建置
+
+## AI 導入評估規劃 (L21201)
+
+### AI 導入評估
+-   核心目的：判斷導入是否具備實質價值與可行性
+-   **2. 導入需求與可行性評估**
+    -   **(1) 業務需求與痛點分析**
+        -   A. 哪些業務流程可作為 AI 導入目標？ (重複性高、決策規則清晰、數據驅動)
+        -   B. 是否存在流程瓶頸或服務缺口？
+        -   C. 是否有需要提升的關鍵績效指標 (KPI)？
+    -   **(2) 技術可行性初探**
+        -   A. 資料品質 (Data Quality)：完整性、一致性、代表性、結構化、標註完整
+        -   B. IT 能力與系統整合性 (IT Resources, System Integration)：伺服器、網路頻寬、雲端架構、資料倉儲
+        -   C. AI 適配性：評估業務情境適合何種 AI 技術路線
+    -   **(3) 成本與效益初步評估**
+        -   A. 成本組成：人力、訓練、清洗、模型開發、整合、顧問、平台授權
+        -   B. 效益量化：KPI、財務模型 (ROI、NPV、回收期 Payback Period)
+        -   C. 資源限制與推動優先順序：依技術成熟度、效益預期、可擴展性
+-   **3. 組織成熟度與導入條件盤點**
+    -   **(1) 數位與資料成熟度**
+        -   數位成熟度 (Digital Maturity)：作業流程數位化基礎 (ERP, CRM)
+        -   資料治理 (Data Governance)：資料正確性、可追溯性、權限控管
+        -   資料取得流程：系統間資料整合 (API, ETL)
+    -   **(2) 團隊能力與跨部門協作**
+        -   A. 組織能力 (Organizational Capability)：AI、資料分析、系統整合核心人才
+        -   B. 跨部門協作 (Cross-functional Collaboration)：統一窗口、溝通順暢
+        -   C. 導入推動責任單位：AI 專案辦公室
+    -   **(3) 資源與預算支持**
+        -   A. 資源盤點 (Resource Inventory)：資金、人力、時間
+        -   B. 預算與來源規劃：年度編列、補助計畫
+        -   C. 導入條件 (Implementation Conditions)：試辦環境、測試資料、專責團隊
+-   **4. 風險與合規初探**
+    -   **(1) 法規遵循與資料隱私風險**
+        -   A. 法規遵循 (Legal Compliance)：遵循 GDPR、《個人資料保護法》
+        -   B. 資料隱私 (Data Privacy)：匿名化、資料使用授權、存取權限控管
+        -   C. 資料跨境傳輸與外包風險：規範與契約保障
+        -   D. 侵權與版權風險：生成內容侵犯第三方版權
+    -   **(2) 技術風險與模型穩定性**
+        -   A. 資料缺口與品質不足
+        -   B. 模型穩定性 (Model Stability)
+        -   C. 黑箱風險與可解釋性問題：引入可解釋 AI (XAI) 技術
+        -   D. 產出內容的不確定性
+    -   **(3) 組織文化與變革阻力**
+        -   A. 組織變革 (Organizational Change)：員工抗拒與不安
+        -   B. 決策文化與數據信任度：建立數據文化
+        -   C. 跨部門配合問題
+    -   **(4) 初步風險緩解與應對策略**
+        -   A. 風險矩陣 (Risk Matrix) 與風險等級 (Risk Level)：評估發生機率與影響程度
+        -   B. 風險緩解策略 (Risk Mitigation)：簽署委外合約、資料清理
+        -   C. 保障機制與風險轉移：保險、第三方協力、概念驗證 (POC)
+-   **5. 概念驗證 (Proof of Concept, POC)**
+    -   **(1) POC 條件設計：可控且具代表性**
+        -   A. 範圍清晰、風險可控
+        -   B. 具代表性業務流程
+        -   C. 資料與技術資源具備初步條件
+        -   D. 利益關係人支持度高
+    -   **(2) 效能指標與使用者回饋收集**
+        -   A. 量化評估：效能指標 (Performance Metrics)
+        -   B. 質性評估：使用者回饋 (User Feedback)
+    -   **(3) 初步導入可行性判斷**
+        -   A. 技術適配性
+        -   B. 預期效益驗證
+        -   C. 組織接受度
+        -   D. 問題與瓶頸辨識
+
+### AI 導入規劃 (L21202)
+-   核心角色：將「可行性與價值潛力」轉化為「具體可執行的規劃行動」
+-   **2. 專案設計與時間資源規劃**
+    -   **(1) 導入規劃的核心原則**
+        -   A. 情境/目的導向
+        -   B. 資源盤點
+        -   C. 彈性調整
+    -   **(2) 資源盤點與配置**
+        -   A. 人力資源：專案負責人、資料工程師、AI 模型開發者、UI/UX 設計師、業務顧問、系統架構師、測試工程師
+        -   B. 硬體資源：GPU 伺服器、雲端平台儲存與計算資源、本地運算設備
+        -   C. 開發工具與框架：Python、TensorFlow、PyTorch、Spark、Hadoop、Git
+    -   **(3) 任務分解與時程設計**
+        -   A. 甘特圖 (Gantt Chart)：視覺化時間軸、任務列表、關鍵路徑
+        -   B. 工作分解結構 (Work Breakdown Structure, WBS)：由上而下拆解任務
+        -   C. 短衝 (Sprint)：敏捷開發 (Agile Development) 框架
+            -   核心組成：Product Owner、Scrum Master、Development Team
+            -   主要活動：Sprint Planning、Daily Scrum、Sprint Review、Sprint Retrospective
+            -   核心產出：Product Backlog、Sprint Backlog、Increment
+        -   D. 跨部門協作機制：協作流程設計、例行同步節奏、共用工具平台 (Jira, Trello, Notion)
+    -   **(5) 任務追蹤工具**
+        -   Trello：看板 (Kanban) 形式，適合小型團隊
+        -   Asana：任務分層、時間軸檢視、跨專案整合
+        -   JIRA：技術團隊任務追蹤 (Issue Tracking)、工作流自訂
+        -   ClickUp：整合 Trello 與 Asana 功能，適合中型專案
+-   **3. AI 導入模式的選擇**
+    -   A. 選用現有商業服務 (Low-code, No-code 服務平台)：快速部署、技術門檻低
+    -   D. 內部技術團隊開發：掌控力強、適應性高
+    -   E. 委外開發：專業性、執行效率高
+-   **4. 導入驗證與彙整**
+    -   **(1) 利用 POC 概念驗證技術與流程可行性**
+    -   **(2) 規劃成果整合**
+        -   A. 導入規劃文件 (Implementation Plan Document)
+        -   B. 專案成果彙整報告 (Planning Summary)
+        -   C. 甘特圖與時程規劃 (Gantt Chart and Timeline)
+        -   D. 資源估算與成本預算表
+        -   E. 利害關係人審查紀錄 (Stakeholder Review)
+
+### AI 風險管理 (L21203)
+-   目的：前瞻性與持續性機制，貫穿模型開發、測試、部署、維運
+-   **2. 風險識別與法規合規**
+    -   **(1) 風險類型與識別**
+        -   A. 技術層風險：資料品質風險、模型穩定性風險
+        -   B. 組織人力層風險：跨部門溝通風險、技能短缺風險、變革抵制風險
+        -   C. 法規層風險：個資與隱私保護風險、產業特定監管法規風險、侵權風險
+    -   **(2) 法規與合規性評估**
+        -   A. 資料隱私與個資保護法規：GDPR、PDPA (台灣個資法)、CDPA (美國消費者資料保護法)
+        -   B. 產業專用合規規範：HIPAA (醫療)、PCI-DSS (支付卡產業)、台灣金融科技創新實驗條例
+-   **3. 偏見 (Bias) 與倫理 (Ethics)**
+    -   **(1) 模型偏見與歧視**
+        -   A. 偏見產生來源與類型：資料分布不均、歷史偏見、標註偏見、演算法偏見
+        -   B. 歧視性結果的潛在影響：弱勢群體歧視、企業品牌與信譽損害
+    -   **(2) 倫理原則與框架**
+        -   A. 國際 AI 倫理原則：透明度、可解釋性、公平性、問責性 (參考歐盟、OECD、聯合國等機構)
+        -   B. 企業內部倫理治理框架：倫理委員會、AI 審查流程、內部教育訓練、透明度與對外溝通
+-   **4. 風險控管策略**
+    -   **(1) 風險控管策略**
+        -   A. 迴避 (Avoidance)：從根本避免風險
+        -   B. 轉移 (Transfer)：透過第三方承擔潛在損失 (保險、委外合約)
+        -   C. 緩解 (Mitigation)：主動措施降低風險 (資料清洗、資料加密)
+        -   D. 接受 (Acceptance)：接受影響較低且控管成本不划算的風險
+        -   E. 風險管理計畫 (Risk Management Plan)
+    -   **(2) 風險監控與工具**
+        -   MLOps (Machine Learning Operations)：自動化模型開發、部署與持續維運流程
+        -   A. 模型漂移監控 (Model Drift Monitoring)
+        -   B. 資料漂移監控 (Data Drift Monitoring)
+        -   C. 效能異常警示 (Performance Anomaly Alerting)
+        -   D. 自動重新訓練 (Auto-retraining)
+
+## AI 技術應用與系統部署
+
+### 數據準備與模型選擇 (L21301)
+-   目的：有效準備資料，並依業務情境、問題類型、資料特性選擇合適模型
+-   **2. 資料收集與清理**
+    -   A. 資料來源與收集
+        -   內部資料來源：ERP、CRM、機台資料、使用者行為資料、內部報表與流程紀錄
+        -   外部資料來源：開放資料、Web Scraping、商業資料庫與數據供應商
+    -   B. 清理與品質檢核
+        -   缺失值 (Missing Values) 處理
+        -   重複值 (Duplicate Values) 清除
+        -   異常值 (Outliers) 檢測與處理
+        -   資料品質 (Data Quality) 評估指標：完整性、一致性、準確性、即時性、唯一性
+-   **3. 資料標註與特徵工程**
+    -   A. 特徵處理流程
+        -   數值特徵轉換：正規化 (Normalization)、標準化 (Standardization)
+        -   類別特徵處理：獨熱編碼 (One-hot Encoding)、標籤編碼 (Label Encoding)
+        -   時間與結構特徵擴增：時間戳處理、文字處理
+    -   B. 特徵選擇與降維
+        -   特徵選擇：資訊增益、皮爾森相關係數、L1 正則化
+        -   降維：主成分分析 (PCA)、t-SNE / UMAP
+    -   C. 自動特徵工程 (Auto Feature Engineering)：AutoML 工具自動生成、選擇特徵
+-   **4. 模型選擇策略**
+    -   A. 監督式學習 - 迴歸任務 (Regression)：預測連續數值結果 (線性迴歸、決策樹迴歸、隨機森林迴歸、梯度提升樹)
+    -   B. 監督式學習 - 分類任務 (Classification)：將資料點分類到不同類別 (邏輯迴歸、決策樹分類、隨機森林分類、SVM、KNN、梯度提升樹分類)
+    -   C. 非監督式學習 (Unsupervised Learning)：找出內在結構、群集或分佈模式 (K-means、DBSCAN、階層式分群、PCA)
+    -   D. 深度學習 (Deep Learning)：多層神經網路處理影像、NLP、語音 (CNN、RNN (LSTM, GRU)、Transformer (BERT, GPT))
+    -   E. 強化式學習 (Reinforcement Learning, RL)：基於「試誤學習」 (Q-learning、DQN、Policy Gradient (PPO))
+    -   F. 生成式模型 (Generative Models)：學習資料機率分佈，生成新樣本 (GANs、VAE、Diffusion Models)
+
+### AI 技術應用與系統部署 (L21302)
+-   目的：將 AI 模型部署至實際營運流程，實現商業價值
+-   **2. 系統集成**
+    -   A. 資料來源與資料管線整合 (Data Pipeline)
+    -   B. 企業內部系統整合 (ERP, CRM, POS, MES)
+    -   C. API 與平台接軌：RESTful API、gRPC、Webhooks
+    -   D. 安全與權限控管：OAuth2、JWT、角色權限設定、API Gateways
+    -   E. 跨雲與異質系統整合：中介整合層或服務中樞 (Service Mesh)
+-   **3. 系統架構設計**
+    -   A. 微服務架構 (Microservices Architecture)：單一應用拆分為小型服務
+    -   B. 容器化與編排 (Containerization and Orchestration)：Docker 封裝、Kubernetes (K8s) 管理容器
+    -   C. 模型服務化與 API 封裝：封裝為 HTTP/REST 推論服務
+    -   D. 可擴充與高可用性設計：冗餘部署、容錯切換 (Failover)
+-   **4. 部署模式**
+    -   A. 公有雲部署 (Public Cloud)：AWS、Microsoft Azure、Google Cloud Platform
+    -   B. 私有雲部署 (Private Cloud)：企業自建或專屬雲端環境
+    -   C. 邊緣運算 (Edge Computing)：推論靠近資料來源端裝置
+    -   D. 混合部署 (Hybrid Deployment)：結合公有雲、私有雲、邊緣架構
+-   **5. MLOps (Machine Learning Operations)**
+    -   定義：DevOps 在 AI 領域延伸，自動化模型訓練、測試、部署與監控
+    -   A. 持續整合與持續部署 (CI/CD)：模型開發、測試、部署自動化
+    -   B. 模型監控與回饋機制：偵測與修正模型效能下降問題
+-   **6. 成效追蹤與優化**
+    -   A. 成效指標設計與回收週期建立：KPI 設定 (系統、應用、業務層級)、資料與績效回收週期
+    -   B. 模型更新與持續優化：模型版本管理與滾動更新、再訓練與資料再標註機制、使用者與業務回饋融入優化流程、自動化模型優化機制
+-   **7. 跨部門整合**
+    -   A. 明確部門角色與參與責任：業務、行銷、客服、營運、法務、風險、資訊部門
+    -   B. 建立常態溝通與決策機制：定期工作小組會議、共用績效指標、快速協調通道
+    -   C. AI 納入組織治理流程：設立 AI 治理委員會、內部 AI 產品經理/協調人員、跨部門培訓與教育機制`
+    },
+    subject2: {
+        title: "科目2：大數據分析",
+        color: "green",
+        markdown: `# 大數據處理分析與應用
+
+## 機率統計基礎
+- 統計學基本觀念重要性
+  - 確立資料基準
+  - 評估隨機性與不確定性
+  - 進行嚴謹的推論與檢定
+- 敘述性統計與資料摘要技術 (3.1)
+  - 集中趨勢 (Central Tendency)
+    - 算術平均 (Arithmetic Mean)
+    - 幾何平均 (Geometric Mean)
+    - 調和平均 (Harmonic Mean)
+    - 眾數 (Mode)
+    - 中位數 (Median)
+  - 離散程度測量 (Variability/Dispersion)
+    - 變異數 (Variance) 與標準差 (Standard Deviation)
+    - 全距 (Range)、四分位距 (IQR)、四分位數 (Quartiles)
+    - 箱形圖 (Box Plot)
+  - 資料偏度 (Skewness) 與峰度 (Kurtosis)
+    - 偏度 (Skewness)
+    - 峰度 (Kurtosis)
+- 機率分佈與資料分佈模型 (3.2)
+  - 機率分佈的兩個重要數值
+    - 期望值 (Expected Value, E(X))
+    - 變異數 (Variance, Var(X))
+  - 機率分佈的兩種類型
+    - 離散型機率分佈 (Discrete Probability Distribution)
+    - 連續型機率分佈 (Continuous Probability Distribution)
+  - 常見離散型分佈
+    - 伯努利分佈 (Bernoulli Distribution)
+    - 二項分佈 (Binomial Distribution)
+    - 泊松分佈 (Poisson Distribution)
+  - 常見連續型分佈
+    - 常態分佈 (Normal Distribution)
+    - 指數分佈 (Exponential Distribution)
+    - 卡方分佈 (Chi-square Distribution)
+  - 分佈擬合與資料建模 (Distribution Fitting & Data Modeling)
+- 假設檢定與統計推論 (3.3)
+  - 參數估計 (Parameter Estimation)
+    - 點估計 (Point Estimation)
+    - 區間估計 (Interval Estimation)
+  - 假設檢定 (Hypothesis Testing) 流程
+    - 設定虛無假設 (H₀) 與對立假設 (H₁)
+    - 選擇適當的檢定方法與檢定統計量
+    - 決定顯著水準 (α)
+    - 計算檢定統計量與 p 值
+    - 作出結論
+  - 型一與型二錯誤 (Type I Error, Type II Error)
+  - 常見統計檢定方法與應用
+    - 平均數的差異檢定 (單樣本 t 檢定, 獨立樣本 t 檢定, 配對樣本 t 檢定, 單因子變異數分析 ANOVA)
+    - 比例或類別變數的比較 (單樣本比例檢定, 雙樣本比例檢定, 卡方檢定)
+    - 相關性分析 (皮爾森相關檢定, 斯皮爾曼等級相關檢定)
+    - 非參數檢定 (Mann-Whitney U 檢定, Kruskal-Wallis 檢定)
+
+## 大數據處理技術
+- 數據收集與清理 (4.1)
+  - 資料來源與蒐集方式
+    - 感測器與物聯網 (IoT) 設備資料
+    - 系統日誌與使用者行為紀錄
+    - API 與外部資料交換
+    - 網路爬蟲與開放資料平台
+    - 企業內部營運系統資料
+  - 資料品質問題類型與評估指標
+    - 缺失值 (Missing Data)
+    - 異常值 (Outliers)
+    - 重複值 (Duplicates)
+    - 一致性錯誤 (Inconsistency)
+    - 邏輯錯誤/不合理資料 (Logical Errors)
+    - 資料品質指標 (缺失率, 唯一值比率, 一致性比率, 異常值比率, 完整性比率)
+- 數據儲存與管理 (4.2)
+  - 資料型態與結構 (結構化, 半結構化, 非結構化)
+  - 分散式儲存 (Distributed Storage)
+    - 主要技術特性 (橫向擴充, 容錯容災能力, 高並行性與分散存取, 分區策略與資料本地性)
+    - 常見技術/平台 (HDFS, Amazon S3, Google Cloud Storage, Ceph, GlusterFS)
+  - 資料湖架構 (Data Lake)
+    - 核心特性 (原始資料保留, 多種資料格式與來源, Schema-on-Read, 與資料湖倉融合)
+    - 常見實作架構與工具 (Apache Hadoop + HDFS + Hive, Delta Lake, Apache Iceberg, Apache Hudi, 雲端資料湖解決方案)
+  - 儲存效能優化與查詢管理
+    - 儲存效能優化策略 (分區儲存, 壓縮技術, 儲存分層, 欄位裁剪與投影)
+    - 查詢管理與加速技術 (預計算與物化檢視, 索引建構, 查詢引擎優化, 資源管控與查詢隔離)
+  - 資料一致性、版本控制與治理機制
+    - 資料一致性機制 (強一致性 Strong Consistency, 最終一致性 Eventual Consistency, ACID 特性, 寫入順序控制與鎖定機制)
+    - 資料版本控制 (版本標記與變更紀錄, 資料快照與版本回溯能力)
+    - 資料治理與存取控管 (元資料管理, 權限控管與角色管理, 存取稽核與合規紀錄, Zero Trust 架構下的資料控管設計)
+- 數據處理技術與工具 (4.3)
+  - 清理後的資料準備與轉換
+    - 資料型別轉換與欄位整理
+    - 分箱 (Binning) 與分類重組
+    - 編碼轉換 (Encoding) (Label Encoding, One-hot Encoding, Target Encoding)
+    - 數值標準化 (Standardization) 與正規化 (Normalization) (Min-Max Normalization, Z-score Standardization, Robust Scaling)
+  - 特徵工程
+    - 特徵選擇方法 (Filter 方法, Wrapper 方法, Embedded 方法)
+    - 特徵衍生與聚合技巧 (交互特徵, 時間特徵, 聚合特徵)
+    - 資料增強方法 (圖像資料增強, 文字資料增強, 時序資料增強, 表格式資料增強)
+  - 分散式處理框架
+    - Apache Hadoop (MapReduce)
+    - Apache Spark
+    - Apache Flink
+    - Apache Beam
+  - 資料處理管線管理與自動化
+    - 資料處理管線設計原則與流程架構 (可重現性, 容錯性與回復機制, 擴充性與彈性, 監控與可觀測性, 批次/即時/混合管線)
+    - 常見資料處理管線工具比較 (Apache Airflow, Luigi, Prefect, Kubeflow Pipelines)
+    - 建構管線自動化要點 (任務拆解與模組化, 版本控管與 CI/CD 整合, 監控與警示設計, 容器化與彈性擴充)
+
+## 大數據分析方法與工具
+- 統計學在大數據中的應用 (5.1)
+  - 大數據下敘述統計的挑戰與限制
+    - 運算資源與即時計算能力的限制
+    - 長尾分佈與資料偏態造成的統計失真
+    - 多型態資料難以統一計算與解釋
+    - 離群值掩蓋與偵測敏感度下降
+    - 資料動態變化與時間敏感性
+  - 大數據下統計推論的挑戰與限制
+    - 樣本非隨機，偏誤被放大
+    - 樣本數大、導致 p 值膨脹 (p-value inflation)
+    - 多重檢定增加偽陽性風險
+    - 樣本非獨立性破壞推論基礎
+    - 母體定義不清，推論對象模糊
+    - 系統與資源限制限制推論方法應用
+  - 統計學在實務中的應用案例
+    - 市場行銷與顧客行為分析
+    - 金融風險管理與信貸模型
+    - 健康醫療資料分析
+    - 製造業品質管理與預測性維護
+    - 網路安全與異常行為偵測
+    - 社會科學與政策分析
+    - 智慧城市與物聯網資料應用
+- 常見的大數據分析方法 (5.2)
+  - 描述性統計與近似計算
+    - 近似描述性統計的基本概念
+    - 常用近似統計技術 (t-digest, Histogram Sketch, Count-Min Sketch, Online Mean / Variance)
+    - 平台與工具支援 (Apache Spark, Google BigQuery, PostgreSQL + 擴充套件)
+  - 時序數據分析
+    - 常見時序分析方法 (趨勢與平滑方法, 統計建模方法, 進階預測模型)
+    - 平台與工具應用 (Apache Spark + Spark MLlib, TimescaleDB, Meta Prophet, Meta Kats)
+    - 應用情境與實務案例 (金融市場分析, 能源與設備管理, 智慧製造與供應鏈, 電商與行銷活動分析)
+  - 網路分析 (Network Analysis)
+    - 核心概念與分析任務 (節點, 邊, 圖屬性, 分析目標)
+    - 常見技術與演算法 (中心性分析, 社群偵測, 鄰近擴展與鏈結預測)
+    - 處理工具與框架 (Apache Spark GraphX / GraphFrames, Neo4j, NetworkX / iGraph, Gephi)
+    - 應用情境與實務案例
+  - 文字分析 (Text Analytics)
+    - 核心處理流程 (文字預處理, 特徵轉換, 任務導向分析)
+    - 處理工具與框架 (Apache Spark NLP, spaCy, Hugging Face Transformers, Gensim)
+    - 應用情境與實務案例 (顧客評論分析, 社群與輿情監控, 客服紀錄分類與自動化, 多語言資料處理)
+  - 地理空間資料分析 (Geospatial Data)
+    - 主要特性與挑戰 (資料型態多樣, 空間異質性, 鄰近關係重要, 資料規模龐大)
+    - 常見地理空間分析方法 (熱點分析, 空間群聚, 地理加權迴歸, 空間插值)
+    - 實務工具與框架 (GeoPandas, ArcGIS / QGIS, Apache Sedona, PostGIS)
+    - 應用情境與實務案例
+  - 異常偵測方法 (Anomaly Detection)
+    - 大數據異常偵測的特性與挑戰
+    - 常見的異常偵測方法 (統計方法, 密度與距離方法, 樹模型)
+    - 處理工具與框架 (PyOD, Apache Spark + MLLib, Elasticsearch + ML module, AWS SageMaker / Azure ML)
+    - 應用情境與實務案例
+- 數據可視化工具 (5.3)
+  - 視覺化方法與圖表類型
+    - 數值型資料的分佈與集中趨勢呈現 (直方圖 Histogram, 箱型圖 Boxplot, KDE 曲線 Kernel Density Estimation)
+    - 變數之間的關聯與結構視覺化 (散佈圖 Scatter Plot, 相關係數矩陣 Correlation Matrix, 熱力圖 Heatmap)
+    - 類別型資料的比較與比例呈現 (長條圖 Bar Chart, 堆疊長條圖 Stacked Bar Chart, 圓餅圖 Pie Chart)
+    - 時間序列資料的趨勢與變化 (折線圖 Line Chart)
+  - 主流數據視覺化平台與工具類型
+    - 依平台部署模式分類 (工具內建報表功能, 自行搭建, 半商業化平台, 商業化視覺化平台)
+    - 依呈現方式分類 (靜態圖表, 動態圖表, 互動式視覺化)
+  - 實務應用案例與設計原則
+    - 實務應用示例 (零售與電商, 製造業, 金融與詐欺偵測, 健康與醫療, 智慧城市與物聯網)
+    - 設計原則與實作建議 (以閱讀者為中心, 圖表類型符合資料型態與目的, 簡化資訊/去除冗餘, 合理使用顏色與標示, 支援互動與探索)
+
+## 大數據在人工智慧之應用
+- 大數據與機器學習 (6.1)
+  - 大數據特性對機器學習流程的影響
+    - 資料規模大 (Volume)
+    - 資料型態多樣 (Variety)
+    - 資料品質與偏態問題 (Veracity)
+    - 資料流動快速 (Velocity)
+    - 資料來源異質 (Veracity & Integration)
+    - 資料價值密度低 (Value)
+  - 模型訓練與加速技術
+    - 分散式模型訓練架構 (Distributed Training) (資料並行, 模型並行, 混合式並行)
+    - 訓練效能最佳化策略 (硬體加速, 混合精度訓練, 梯度累積與梯度壓縮, Early Stopping 與 Checkpointing)
+    - 進階應用情境與延伸挑戰
+  - 大數據到模型部署的整合流程 (End-to-End ML Pipeline / MLOps)
+    - 資料整合與處理管線 (Data Processing)
+    - 模型訓練與驗證 (Model Training & Validation)
+    - 模型部署與上線 (Model Deployment)
+    - 持續監控與模型維運 (Monitoring & Lifecycle Management)
+- 大數據在鑑別式 AI 中的應用 (6.2)
+  - 典型應用情境與模型任務
+    - 金融與風險管理
+    - 零售與電商推薦
+    - 客服與文本分類
+    - 醫療與健康科技
+    - 資安與異常偵測
+  - 輸入資料類型與標註資料來源整合
+    - 常見輸入資料型態與特性 (結構化資料, 半結構化資料, 非結構化資料, 多模態資料)
+    - 資料標註策略與實務考量 (人工標註, 弱監督式標註, 群眾外包標註, 主動式學習)
+    - 跨來源資料整合與資料一致性挑戰
+    - 資料品質與統計推論的關聯
+- 大數據在生成式 AI 中的應用 (6.3)
+  - 資料選擇對生成式 AI 內容品質的影響
+    - 資料多樣性
+    - 資料代表性與偏誤風險 (性別與族群偏誤, 地區與文化偏誤, 社經地位偏誤, 資料來源平台偏誤)
+    - 資料品質與內容正確性
+    - 資料時效性與資料更新
+  - 典型應用情境
+    - 語言生成 (Text Generation)
+    - 圖像生成 (Image Generation)
+    - 多模態生成 (Multimodal Generation)
+    - 資料增強與模擬訓練資料 (Synthetic Data)
+- 大數據隱私保護、安全與合規 (6.4)
+  - 個資識別風險
+    - 定義 (直接識別資訊, 準識別資訊, 敏感資料)
+    - 風險來源 (橫向比對, 時間軸拼接, 保護不足)
+    - 實務案例
+  - 資料匿名化技術 (Data Anonymization) 與隱私強化技術 (PETs)
+    - 基礎資料匿名化技術 (遮蔽 Masking, 雜湊處理 Hashing, 泛化 Generalization, 資料分桶 Bucketing 與分組, 隨機擾動 Noise Injection)
+    - 進階隱私強化技術 (K-匿名 / L-多樣性 / T-接近性, 差分隱私 Differential Privacy, 聯邦學習 Federated Learning, 同態加密 Homomorphic Encryption)
+  - AI 訓練資料的合規取得與處理
+    - 合規資料處理的基本原則 (合法性/正當性/透明性, 目的限制原則, 資料最小化原則, 保存期限限制, 可追蹤與可刪除性)
+    - AI 訓練資料取得的合法依據與適用範圍 (明確同意, 契約履行必要, 公共利益或學術研究, 非個人資料)
+  - 企業內部治理機制
+    - 制定資料與 AI 治理政策
+    - 建立跨部門治理組織
+    - 建構資料與模型生命週期流程
+    - 導入技術與自動化治理工具
+    - 強化內部文化與教育訓練`
+    },
+    subject3: {
+        title: "科目3：機器學習",
+        color: "purple",
+        markdown: `# 機器學習技術與應用
+
+## 機器學習基礎數學
+-   **3.1 機率與統計之機器學習應用**
+    - 探討資料中的不確定性來源
+    - 隨機變數與機率表示
+        - 離散型機率分佈 (Discrete Probability Distribution)
+            - 離散型隨機變數 (有限或可數值)
+            - 機率質量函數 (PMF)
+            - 常見分佈: 伯努利分佈 (Bernoulli), 二項分佈 (Binomial), 泊松分佈 (Poisson)
+        - 連續型機率分佈 (Continuous Probability Distribution)
+            - 連續型隨機變數 (無限連續值)
+            - 機率密度函數 (PDF)
+            - 常見分佈: 常態分佈 (Normal), 均勻分佈 (Uniform), 指數分佈 (Exponential), 卡方分佈 (Chi-square)
+    - 機率與貝氏推論
+        - 條件機率 (Conditional Probability)
+            - 定義: P(A|B) = P(A∩B) / P(B)
+            - 應用場景: 分類任務預測, 生醫金融風險預測, 生成模型變數關聯
+        - 貝氏定理 (Bayes' Theorem)
+            - 定義: P(A|B) = P(B|A)P(A) / P(B)
+            - 構成元素: 先驗機率 P(A), 似然 P(B|A), 邊際機率 P(B), 後驗機率 P(A|B)
+    - 假設檢定與統計推論
+        - 統計推論核心任務: 利用樣本資料對母體參數或模型行為進行估計與判斷
+            - 參數估計 (Parameter Estimation): 推測母體參數的值或區間
+            - 假設檢定 (Hypothesis Testing): 驗證關於母體參數的主張是否成立
+        - 假設檢定流程
+            - 設定虛無假設與對立假設
+            - 選擇檢定方法與統計量
+            - 決定顯著水準
+            - 計算檢定統計量與 p 值
+            - 比較顯著水準(α)並進行決策
+        - 顯著水準 (α) 與 p 值
+            - 顯著水準: 可接受的錯誤機率上限 (Type I Error)
+            - p 值: 資料與虛無假設的相符程度
+    - 統計量與機器學習應用 (資料前處理與探索階段)
+        - 期望值 (Expected Value): 平均趨勢
+        - 變異數 (Variance) 與標準差 (Standard Deviation): 離散程度
+        - 偏態 (Skewness): 分佈對稱性
+        - 峰度 (Kurtosis): 資料尖峰或厚尾
+-   **3.2 線性代數之機器學習應用**
+    - 向量與矩陣表示
+        - 向量在機器學習中的角色
+            - 點積 (Dot Product): 評估向量對應程度, 相似度
+            - L2 範數 (Norm): 向量長度或大小, 正規化基礎
+            - 向量加減與線性組合: 誤差向量, 梯度向量
+        - 矩陣在機器學習中的應用
+            - 特徵矩陣, 權重矩陣
+            - 矩陣運算: 矩陣乘法, 轉置 (Transpose), 矩陣求逆與偽逆 (Inverse, Pseudo-Inverse)
+            - 模型建構應用: 線性迴歸, 神經網路前向傳播, 主成分分析
+    - 線性變換與特徵空間
+        - 向量經過矩陣運算的幾何意涵: 縮放 (Scaling), 旋轉 (Rotation), 剪切 (Shearing), 投影 (Projection)
+        - 線性變換與特徵空間重構: 特徵重組, 維度轉換, 方向加權 (例: PCA)
+        - 線性變換在機器學習模型中的出現形式: 線性迴歸, 神經網路前向傳播, 嵌入層
+    - 矩陣分解與維度簡化
+        - 核心概念: 將高維矩陣拆解為數個較小具結構意義的子矩陣
+        - 常見矩陣分解方法與應用
+            - 特徵值分解 (Eigenvalue Decomposition): 適用對稱方陣, PCA, LDA
+            - 奇異值分解 (Singular Value Decomposition, SVD): 適用任意實數矩陣, 降維, 推薦系統, 語意分析, 影像壓縮
+            - 非負矩陣分解 (Non-negative Matrix Factorization, NMF): 適用非負矩陣, 主題建模, 生物訊號分析, 影像分析, 社群分析
+        - 維度簡化與學習效率的關聯: 提升訓練效率, 穩定模型表現, 強化資料解釋性, 利於視覺化
+    - 最小平方估計與線性迴歸
+        - 核心概念: 誤差最小化以估計參數 (Ordinary Least Squares, OLS)
+        - 幾何觀點下的線性迴歸: 資料投影到最接近實際結果的平面
+        - 應用情境與特點: 銷售預測, 醫療風險評估, 房價估值, 行為建模
+-   **3.3 數值優化技術與方法**
+    - 最佳化問題的基本構成要素
+        - 目標函數 (Objective Function / Loss Function): 衡量模型輸出與實際答案偏差
+            - 迴歸任務: 均方誤差 (MSE)
+            - 分類任務: 交叉熵損失 (Cross-Entropy Loss)
+            - 排序/排名任務: 對比損失 (Contrastive Loss) 或排序損失 (Ranking Loss)
+        - 決策變數 (Decision Variables): 模型中可調整的參數 (權重係數, 偏差項, 條件機率, 潛在變數)
+        - 可行域 (Feasible Region): 決策變數的合法範圍 (非負, 上下限, 總和約束, 稀疏性限制)
+        - 函數性質: 凸性 (Convexity), 可導性 (Differentiability)
+        - 機器學習脈絡中的應用: 線性模型, 深度學習, 生成模型與策略學習
+    - 優化演算法
+        - 基礎方法：梯度下降及其變形
+            - 梯度下降法 (Gradient Descent, GD): 使用整個訓練資料集計算梯度
+            - 隨機梯度下降 (Stochastic Gradient Descent, SGD): 每次使用一筆樣本估算梯度
+            - 小批次梯度下降 (Mini-batch SGD): 每次用一批資料計算梯度
+        - 進階方法：學習率調整與收斂加速技巧
+            - 動量法 (Momentum): 累積前幾次梯度方向
+            - Adagrad: 自動調整每個參數學習率
+            - RMSprop: 修正 Adagrad 學習率過快下降問題
+            - Adam (Adaptive Moment Estimation): 結合動量與 RMSprop
+    - 收斂判準與訓練穩定性
+        - 常見的收斂判準 (Convergence Criteria): 損失函數變化趨緩, 驗證集效能不再提升, 梯度趨近零, 訓練步數或時間達上限
+        - 訓練穩定性的重要性: 避免劇烈震盪、發散或梯度爆炸
+            - 不穩定因素: 學習率過高, 初始權重不當, 損失函數/資料分佈不連續, 批次大小過小
+        - 常用的穩定訓練策略: 學習率調整 (Learning Rate Scheduling), 早停 (Early Stopping), 梯度裁剪 (Gradient Clipping), 批次正規化 (Batch Normalization)
+
+## 機器學習與深度學習
+-   **4.1 機器學習原理與技術**
+    - 機器學習基本結構
+        - 輸入資料與特徵空間 (Feature Space)
+        - 任務目標與標籤型態 (分類, 迴歸, 聚類, 降維, 序列決策)
+        - 模型與假設空間 (Hypothesis Space)
+        - 學習目標與損失函數 (Loss Function)
+        - 資料分割與評估準則 (訓練集, 驗證集, 測試集, 評估指標)
+    - 監督式學習 (Supervised Learning)
+        - 基本架構: 輸入特徵 (Features) 與目標標籤 (Label)
+        - 主要任務類型: 分類 (Classification), 迴歸 (Regression)
+        - 訓練流程與評估方法: 資料準備與標記, 模型訓練, 驗證與調整, 測試與部署
+        - 應用場景: 圖像分類, 客戶信用風險評估, 醫療診斷
+    - 非監督式學習 (Unsupervised Learning)
+        - 基本架構: 資料樣本分組/歸類, 高維資料降維/投影, 潛藏變數/生成機制估計
+        - 主要任務類型: 聚類 (Clustering), 降維 (Dimensionality Reduction), 關聯規則學習 (Association Rule Learning), 潛在表示學習 (Representation Learning)
+        - 訓練流程與評估方法: 資料準備與標準化, 模型選擇與超參數設定, 模型擬合與重複迭代, 內部/外部評估指標, 視覺化輔助分析
+        - 應用場景: 客戶分群與行為分析, 社群偵測與異常發現, 影像壓縮與重建, 主題模型與語意分析, 特徵工程與前處理
+    - 強化式學習 (Reinforcement Learning, RL)
+        - 基本架構: 代理人 (Agent), 環境 (Environment), 狀態 (State), 動作 (Action), 報酬 (Reward), 策略 (Policy), 價值函數 (Value Function)
+        - 主要任務類型: 策略學習 (Policy Learning), 價值學習 (Value-Based), 模型式學習 (Model-Based RL), 模型無關學習 (Model-Free RL)
+        - 訓練流程與評估方法: 初始化策略/價值函數, 與環境互動收集經驗, 更新策略/價值估計, 重複試誤學習, 評估指標 (平均累積報酬, 成功率, 策略穩定性, 收斂速度)
+        - 應用場景: 遊戲 AI 與對弈系統, 自駕車與機器人控制, 推薦系統與廣告分發, 金融投資與資源配置, 運輸與物流排程
+-   **4.2 常見機器學習演算法**
+    - 監督式學習 - 迴歸任務
+        - 線性迴歸 (Linear Regression): 最基礎, 預測連續數值, 誤差最小化
+        - Lasso 迴歸與嶺迴歸: L1/L2 正則化, 防止過擬合
+        - 支援向量迴歸 (Support Vector Regression, SVR): SVM 延伸, 處理迴歸, ε-tube
+        - 決策樹迴歸 (Decision Tree Regressor): 分割子區塊, 捕捉非線性結構
+        - 集成式迴歸 (Ensemble Regression)
+            - 隨機森林迴歸 (Random Forest Regressor): 多棵決策樹平均預測
+            - 梯度提升迴歸 (Gradient Boosting Regressor): 序列式集成, 逐步修正誤差
+            - 高效梯度提升方法 (XGBoost, LightGBM): 效能優化, Level-wise vs Leaf-wise
+    - 監督式學習 - 分類任務
+        - 邏輯迴歸 (Logistic Regression): 二元分類, p=1/(1+e^-z)
+        - 支援向量機 (Support Vector Machine, SVM): 尋找最佳決策邊界, 核函數處理非線性
+        - 決策樹分類器 (Decision Tree Classifier): 判斷規則, 分割資料, 評估指標 (Gini Impurity, Information Gain)
+        - K 最近鄰分類 (K Nearest Neighbors, KNN): 非參數, 惰性學習, 相似性度量
+        - 樸素貝式分類 (Naïve Bayes Classifier): 貝式定理, 特徵條件獨立性假設
+        - 集成式分類 (Ensemble Classification)
+            - Bagging (Bootstrap Aggregating): 降低模型變異性 (Random Forest)
+            - Boosting: 降低偏差 (Gradient Boosting, XGBoost, LightGBM)
+    - 非監督式學習
+        - 分群分析 (Clustering)
+            - k-means 分群: 迭代式, 預設 K 值
+            - 階層式分群 (Hierarchical Clustering): 巢狀群集序列 (凝聚式, 分裂式)
+            - DBSCAN (Density-Based Spatial Clustering of Applications with Noise): 基於密度, 辨識任意形狀群集
+        - 降維技術 (Dimensionality Reduction)
+            - 主成分分析 (Principal Component Analysis, PCA): 線性降維, 最大化變異方向
+            - t-SNE (t-distributed Stochastic Neighbor Embedding): 非線性降維, 視覺化
+            - UMAP (Uniform Manifold Approximation and Projection): 高性能非線性降維
+        - 關聯規則學習 (Association Rule Learning)
+            - Apriori 演算法: 迭代與剪枝, 頻繁項目集 (Support, Confidence, Lift)
+            - FP-Growth: 更高效, FP 樹挖掘
+        - 異常偵測 (Anomaly Detection)
+            - Isolation Forest (孤立森林): 基於樹, 異常點易孤立
+            - One-Class SVM: 單類別分類, 學習正常模式邊界
+-   **4.3 深度學習原理與框架**
+    - 深度學習基本概念
+        - 人工神經元與感知器
+            - 人工神經元: 受生物神經元啟發, 加權求和, 激活函數
+            - 感知器 (Perceptron): 最簡單人工神經元, 二元分類器, 步階激活函數
+        - 激活函數的角色
+            - 引入非線性 (ReLU, Sigmoid, Tanh)
+            - 決定神經元「激活」狀態
+            - 壓縮輸出範圍 (Sigmoid, Tanh)
+        - 前向傳播與反向傳播原理
+            - 前向傳播 (Forward Propagation): 輸入數據 -> 預測結果
+            - 反向傳播 (Backpropagation): 計算誤差 -> 修正參數 (梯度, 連鎖律 Chain Rule)
+        - 損失函數與優化器
+            - 損失函數 (Loss Function): 衡量模型預測誤差
+            - 優化器 (Optimizer): 更新模型參數 (權重, 偏差)
+        - 過擬合與正則化技術
+            - 過擬合 (Overfitting): 模型過於複雜, 訓練數據不足, 訓練時間過長
+            - 正則化技術 (Regularization Techniques): 限制模型複雜度
+                - L1 正則化 (Lasso Regularization)
+                - L2 正則化 (Ridge Regularization)
+                - Elastic Net (結合 L1, L2)
+                - Dropout (隨機關閉神經元)
+                - 早停法 (Early Stopping)
+    - 深度學習模型架構
+        - 多層感知器 (Multilayer Perceptron, MLP): 最基礎, 前饋神經網路, 全連接層 (輸入, 隱藏, 輸出)
+        - 卷積神經網路 (Convolutional Neural Network, CNN): 局部相關性與空間層次結構
+            - 模型結構: 卷積層, 激活函數層, 池化層, 全連接層
+            - 衍伸模型: AlexNet, VGG, GoogLeNet, ResNet, DenseNet, MobileNet/EfficientNet
+        - 遞迴神經網路 (Recurrent Neural Network, RNN): 處理序列數據, 時間依賴性, 上下文資訊
+            - 模型結構: 迴圈神經元, 隱藏狀態, 輸出
+            - 關鍵特性: 權重共享, 展開視角 (Unrolled View), 時間上的反向傳播 (BPTT)
+            - 衍伸模型: 長短期記憶網路 (LSTM), 門控循環單元 (GRU), 雙向遞迴神經網路 (Bi-RNN), 深度遞迴神經網路 (Deep RNN)
+        - Transformer 架構: 完全基於注意力機制 (Attention Mechanism), 解決長期依賴與並行化問題
+            - 模型架構: 編碼器堆疊, 解碼器堆疊
+            - 模型組成機制: 注意力機制, 自注意力 (Self-Attention), 多頭注意力 (Multi-Head Attention), 位置編碼 (Positional Encoding), 前饋網路 (Feed-Forward Network, FFN), 殘差連接 (Residual Connections), 層歸一化 (Layer Normalization, LN)
+            - 衍伸模型: BERT, GPT 系列, T5, Vision Transformer (ViT), 長序列 Transformer
+    - 深度學習主流框架
+        - TensorFlow 與 Keras: Google 開發, 靜態/動態計算圖, 跨平台部署, 生產級部署, 高階 API
+        - PyTorch: Facebook AI Research (FAIR) 開發, 動態計算圖, 即時執行, Pythonic 介面, 自動微分 (Autograd)
+        - JAX: Google 開發, 機器學習轉換框架, NumPy 易用性, 自動微分, GPU/TPU 高效利用
+        - MXNet: Apache 開源, Amazon Web Services (AWS) 支持, 靈活高效
+        - PaddlePaddle: 特定組織支持的深度學習框架
+
+## 機器學習建模與參數調校
+-   **5.1 數據準備與特徵工程**
+    - 數據清理
+        - 缺失值處理 (Missing Value): 刪除法, 填補法 (均值/中位數/眾數, 相似樣本, 預測模型), 缺失指標編碼
+        - 異常值偵測與處理 (Outlier Detection & Handling): 統計方法 (Z 分數, IQR), 視覺化分析 (箱型圖, 散佈圖), 機器學習方法 (Isolation Forest, LOF), 處理策略 (移除, 截尾/轉換, 標記保留)
+        - 重複樣本與資料一致性檢查: 重複資料偵測, 單位與格式標準化
+    - 資料型別轉換與欄位格式調整: 類型轉換 (數值/類別), 時間資料解析 (時間戳, 週期性變數, 時間差)
+    - 清理流程的策略考量: 模型對資料品質敏感度差異, 建立資料處理紀錄與流程可追溯性 (Data Lineage)
+    - 特徵選擇與降維方法
+        - 特徵選擇方法 (Feature Selection): Filter 方法 (統計量, 相關係數, 卡方檢定), Wrapper 方法 (RFE), Embedded 方法 (決策樹重要性, Lasso, Ridge)
+        - 降維方法 (Dimensionality Reduction): PCA, LDA, t-SNE, UMAP, SVD
+    - 特徵轉換與資料標準化
+        - 資料尺度調整 (Scaling): Min-Max Normalization, Z-score Standardization, Robust Scaling
+        - 分佈轉換 (Transformation): 對數轉換, 平方根/立方根轉換, Box-Cox / Yeo-Johnson 轉換
+        - 類別資料處理 (Categorical Encoding): Label Encoding, One-hot Encoding, Target Encoding
+        - 時間與週期性資料轉換: 拆解時間欄位, 建構週期性特徵
+    - 資料增強 (Data Augmentation): 產生額外新樣本或變形
+        - 常見方法: 圖像, 文字, 時序, 表格式資料增強 (SMOTE)
+        - 優點: 增加多樣性, 降低過擬合, 幫助泛化, 不需額外數據
+        - 缺點: 不當變換可能改變語意, 計算成本高, 需謹慎選擇
+    - 特徵工程策略: 依任務類型設計, 依模型性質調整, 探索隱含結構, 考慮時間性/序列關聯
+-   **5.2 模型選擇與架構設計**
+    - 模型選擇的原則與考量因素
+        - 任務類型與模型特性配對: 分類, 迴歸, 非監督式學習, 序列與時間序列任務
+        - 資料規模與模型選擇: 小型, 中型, 大型資料集
+        - 模型解釋性需求: 高解釋性模型, 低解釋性模型 (需搭配可解釋性技術 SHAP, LIME)
+        - 運算資源與實務部署限制: 資源受限, 資源充足, 即時推論需求
+    - 偏差-變異的權衡 (Bias-Variance Tradeoff)
+        - 偏差 (Bias): 模型擬合能力不足, 系統性誤差偏高 (欠擬合 Underfitting)
+        - 變異 (Variance): 模型對訓練資料敏感, 表現差異大 (過擬合 Overfitting)
+        - 模型複雜度與偏差/變異關係: 低複雜度 (高偏差, 低變異), 高複雜度 (低偏差, 高變異)
+-   **5.3 模型訓練、評估與驗證**
+    - 模型訓練流程與策略
+        - 資料分割與準備: 訓練集 (Training Set), 驗證集 (Validation Set), 測試集 (Test Set), K-fold 交叉驗證
+        - 批次訓練設計與更新策略: 全量訓練 (Batch Gradient Descent), 隨機梯度下降 (SGD), 小批次訓練 (Mini-batch SGD)
+        - 學習率調整 (Learning Rate): 固定學習率, 遞減學習率, 動態調整, 預熱策略
+        - 早停策略與訓練終止準則 (Early Stopping): 設定容忍次數 (Patience), 最小改善幅度
+        - 訓練過程的記錄與監控: 訓練指標視覺化, 超參數與模型版本管理, 資源使用狀況
+    - 評估指標與模型效果衡量
+        - 分類任務的評估指標: 混淆矩陣 (Confusion Matrix), 準確率 (Accuracy), 精確率 (Precision), 召回率 (Recall), F1 分數 (F1-Score), ROC 曲線與 AUC
+        - 迴歸任務的評估指標: 均方誤差 (MSE), 平均絕對誤差 (MAE), 均方根誤差 (RMSE), 決定係數 (R² Score)
+        - 模型比較與綜合評估策略: 指標組合, 類別不平衡處理 (Class Weights, SMOTE), 業務導向與自定義效能衡量, 多輪驗證與效能穩定性觀察
+    - 交叉驗證 (Cross-Validation)
+        - K-fold 交叉驗證: 最常見, 將資料集劃分 K 份輪流訓練驗證
+        - Stratified K-fold (分層 K 折交叉驗證): 分類問題改良版, 保持類別比例
+        - LOOCV (Leave-One-Out Cross-Validation): K-fold 極端形式, K=樣本數 n
+        - Repeated K-fold (重複 K-fold): 多次隨機重劃 K-fold, 提升穩定性
+-   **5.4 模型調整與優化**
+    - 超參數調校 (Hyperparameter Tuning)
+        - 學習率 (Learning Rate): 控制梯度更新幅度
+        - 批次大小 (Batch Size): 每次參與梯度更新的樣本數量
+        - 網路深度與寬度: 神經網路層數與神經元數量
+        - 激活函數 (Activation Function): 將加權輸入轉換為非線性輸出 (Softmax, ReLU, Sigmoid, Tanh)
+        - 優化器 (Optimizer): 更新模型參數的演算法 (SGD, Momentum, Adagrad, Adam)
+    - 正則化技術 (Regularization): 避免模型過度擬合
+        - L1 正則化 (Lasso Regularization): 加入參數絕對值總和, 特徵選擇
+        - L2 正則化 (Ridge Regularization): 加入參數平方和, 防止權重過大
+        - Elastic Net: 結合 L1 與 L2
+        - Dropout: 隨機關閉部分神經元
+        - Early Stopping: 驗證集效能不再改善時停止訓練
+    - 資料增強與重取樣 (Data Augmentation & Resampling)
+        - 資料增強 (Data Augmentation): 隨機變換手段, 擴增訓練資料
+        - 重取樣 (Resampling): 調整樣本數量或權重
+            - 過採樣 (Oversampling): 增加少數類別樣本 (SMOTE)
+            - 欠採樣 (Undersampling): 減少多數類別樣本
+            - 類別權重調整 (Class Weighting): 賦予少數類別更高權重
+    - 模型壓縮與加速技術 (Model Compression & Acceleration)
+        - 知識蒸餾 (Knowledge Distillation): 大型教師模型知識傳遞給小型學生模型
+        - 模型剪枝 (Pruning): 移除影響較小權重/神經元 (結構化, 非結構化)
+        - 量化 (Quantization): 高精度參數轉換為低精度格式
+        - 混合精度訓練 (Mixed Precision Training): 同時使用不同數值精度
+
+## 機器學習治理
+-   **6.1 數據隱私、安全與合規**
+    - 數據隱私風險的辨識與評估
+        - 常見數據隱私風險分類
+            - 直接識別風險 (Directly Identifiable Information, PII): 姓名, 身分證號
+            - 間接識別風險 (準識別資訊 Quasi-identifiers): 性別, 出生年月, 職業
+            - 再識別風險 (Re-identification Simulation): 匿名化資料被重新還原
+        - 隱私風險辨識與風險評估 (Privacy Impact Assessment, PIA)
+            - 資料盤點與分類: 資料來源, 處理流程, 欄位型態, 接觸單位, 流通路徑, 儲存位置, 保留期限, 層級分類 (公開, 非公開), 敏感度層級 (一般, 機密, 個人, 高度敏感個資)
+            - 隱私影響評估 (PIA) 執行流程: 資料流程盤點, 風險辨識, 影響程度分析, 策略擬定, 治理責任分工
+            - 風險矩陣與風險等級 (Risk Matrix): 發生機率 (Probability) x 影響程度 (Impact)
+    - 隱私強化與匿名化技術
+        - 基礎資料匿名化技術 (Data Anonymization)
+            - 遮蔽 (Masking): 符號或虛構數據替換敏感欄位
+            - 雜湊處理 (Hashing): 單向雜湊產生固定長度字串
+            - 泛化 (Generalization): 降低資料精度 (日期泛化年代, 地址泛化城市)
+            - 分桶 (Bucketing) 或分組: 連續數值轉換為區間
+            - 隨機擾動 (Noise Injection): 加入隨機噪聲
+        - 進階隱私強化技術 (PETs)
+            - K-匿名 (K-Anonymity), L-多樣性 (L-Diversity), T-接近性 (T-Closeness)
+            - 聯邦學習 (Federated Learning): 模型在客戶端本地訓練, 傳回參數更新
+            - 同態加密 (Homomorphic Encryption): 在加密資料上直接運算
+    - 合規實務建議
+        - 合法來源與告知同意: 自由性, 明確性與具體性, 可撤回性
+        - 資料最小化與目的限制: 遵循「必要性原則」, 避免無關資訊, 不得用於未告知目的
+        - 去識別化或匿名化處理: 優先採取, 驗證匿名化效果, 考慮敏感欄位處理
+        - 透明度與紀錄保存: 資料處理紀錄, 對外資訊透明, 定期內部稽核
+        - 跨境傳輸規範: 識別跨國資料流通限制, 評估隱私保護水準, 制定傳輸協議
+-   **6.2 演算法偏見與公平性**
+    - 偏見的成因與類型
+        - 資料代表性與偏誤風險: 訓練資料未忠實反映目標群體特性
+            - 來源偏誤 (Source Bias): 群體分佈不均, 社經/地理偏重, 文化/語言侷限, 來源平台侷限
+            - 內容偏誤 (Content Bias): 資料內含不公平或歧視觀點
+            - 製程偏誤 (Process Bias): 資料標註或處理過程中主觀判斷不一致
+        - 模型偏見與歧視: 演算法設計, 目標設定或學習邏輯引入偏見
+            - 演算法偏見 (Algorithmic Bias): 忽略少數群體需求
+            - 目標函數偏誤 (Objective Function Bias): 犧牲特定群體準確度
+            - 正規化與簡化偏誤 (Regularization Bias): 降低對少數群體特徵敏感度
+            - 對抗式訓練不足 (Insufficient Adversarial Training): 保留部分偏見
+    - 偏見的潛在影響: 弱勢群體受歧視, 企業品牌與信譽受損, 法律與監管風險
+    - 公平性指標與評估工具
+        - 常見公平性指標
+            - Demographic Parity (群體平等率): 不同群體獲得正向預測比例應大致相同
+            - Equal Opportunity (機會平等): 實際應獲得正向預測個案中, 不同群體被正確預測機率相同
+            - Equalized Odds (均衡機率): 模型在不同群體間, 對「正例」與「負例」都有相同預測機率
+            - Disparate Impact (不利影響比): 比較群體間獲得正向結果的比例
+        - 公平性評估工具
+            - IBM AI Fairness 360 (AIF360): 開源 Python 工具包, 支援多種公平性指標與去偏技術
+            - Microsoft Fairlearn: Python 工具, 衡量及降低 AI 系統中的公平性問題
+    - 降低演算法偏見的方法論與技術方案
+        - 資料前處理: 針對資料本身進行調整或修正
+            - 資料重新抽樣 (Re-sampling)
+            - 特徵去偏處理 (Feature Neutralization)
+            - 資料匿名化與泛化 (Data Anonymization and Generalization)
+        - 模型內部處理: 將公平性指標或約束條件加入模型演算法
+            - 公平性約束訓練 (Fairness Constraints)
+            - 對抗式去偏模型 (Adversarial Fairness)
+            - 公平性正規化 (Fairness Regularization)
+        - 模型後處理: 針對模型輸出的結果進行修正
+            - 結果門檻調整 (Threshold Adjustment)
+            - 結果校準 (Calibration)
+    - 組織面向的 AI 公平性治理策略
+        - 建立 AI 公平性治理機制: 建立政策與標準, 設立跨部門公平性審查委員會, 明確責任與問責機制
+        - 多元化團隊與公平意識教育訓練: 招募多元化團隊成員, 推動公平性與倫理培訓
+        - 公平性評估與稽核制度: 定期公平性稽核 (Fairness Audits), 導入公平性指標監控系統
+        - AI 公平性資訊揭露與溝通策略: 主動揭露 AI 公平性報告, 引入第三方獨立驗證, 與利益關係人保持溝通`
+    }
+};

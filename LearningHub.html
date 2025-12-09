@@ -102,6 +102,11 @@
             }
         }
 
+        /* Markmap Node Cursor */
+        .markmap-node {
+            cursor: pointer !important;
+        }
+
         /* Tour Customization */
         .shepherd-element {
             filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.1));
@@ -126,171 +131,219 @@
     </style>
 </head>
 
-<body class="flex h-screen text-slate-800">
+<body class="flex h-screen text-slate-800 overflow-hidden">
 
-    <!-- Sidebar -->
-    <aside class="w-80 glass flex flex-col border-r border-white/50 z-20 shadow-xl transition-all duration-300"
-        id="sidebar">
-        <!-- Header -->
+    <!-- Left Sidebar - Learning Center -->
+    <aside class="glass flex flex-col border-r border-white/50 z-20 shadow-xl transition-all duration-300" id="sidebar"
+        style="width: 320px;">
+        <!-- Header with Collapse Button -->
         <div class="p-6 border-b border-white/50 flex justify-between items-center">
-            <div>
+            <div class="flex-1 min-w-0">
                 <h1
-                    class="text-2xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
+                    class="text-2xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent whitespace-nowrap">
                     AI 學習中心
                 </h1>
                 <p class="text-xs text-slate-500 mt-1">iPAS AI 應用規劃師</p>
             </div>
-            <button onclick="app.startTour()" class="text-slate-400 hover:text-blue-500" title="開啟教學">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                    <path fill-rule="evenodd"
-                        d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z"
-                        clip-rule="evenodd" />
-                </svg>
-            </button>
+            <div class="flex gap-2">
+                <button onclick="app.startTour()" class="text-slate-400 hover:text-blue-500" title="開啟教學">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd"
+                            d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z"
+                            clip-rule="evenodd" />
+                    </svg>
+                </button>
+                <button onclick="app.toggleSidebar()" class="text-slate-400 hover:text-blue-500" title="收合側邊欄">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd"
+                            d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z"
+                            clip-rule="evenodd" />
+                    </svg>
+                </button>
+            </div>
         </div>
 
-        <!-- Settings: API Key & Model -->
-        <div class="px-6 py-4 space-y-4">
-            <!-- API Key -->
-            <div id="apiKeySection" class="relative">
-                <label class="block text-xs font-semibold text-slate-500 mb-2 uppercase tracking-wider">Gemini API
-                    Key</label>
-                <div class="flex gap-2">
-                    <input type="password" id="apiKeyInput" placeholder="輸入 API Key"
-                        class="w-full bg-white/50 border border-slate-200 rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-500/50 transition-all placeholder:text-slate-400">
-                    <button id="saveKeyBtn"
-                        class="bg-blue-600 hover:bg-blue-700 text-white rounded-lg px-3 py-2 transition-colors shadow-lg shadow-blue-500/30">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+        <!-- Sidebar Content -->
+        <div id="sidebarContent" class="flex-1 flex flex-col overflow-hidden">
+            <!-- Settings: API Key & Model -->
+            <div class="px-6 py-4 space-y-4">
+                <!-- API Key -->
+                <div id="apiKeySection" class="relative">
+                    <label class="block text-xs font-semibold text-slate-500 mb-2 uppercase tracking-wider">Gemini API
+                        Key</label>
+                    <div class="flex gap-2">
+                        <input type="password" id="apiKeyInput" placeholder="輸入 API Key"
+                            class="w-full bg-white/50 border border-slate-200 rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-500/50 transition-all placeholder:text-slate-400">
+                        <button id="saveKeyBtn"
+                            class="bg-blue-600 hover:bg-blue-700 text-white rounded-lg px-3 py-2 transition-colors shadow-lg shadow-blue-500/30">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20"
+                                fill="currentColor">
+                                <path fill-rule="evenodd"
+                                    d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                                    clip-rule="evenodd" />
+                            </svg>
+                        </button>
+                    </div>
+                    <p id="keyStatus" class="text-[10px] text-slate-400 mt-1 pl-1">Key 儲存於瀏覽器本地端</p>
+                </div>
+
+                <!-- Model Selector -->
+                <div id="modelSection" class="relative">
+                    <label class="block text-xs font-semibold text-slate-500 mb-2 uppercase tracking-wider">使用模型 (Model
+                        ID)</label>
+                    <input type="text" id="modelInput" value="gemini-2.5-flash" placeholder="例如: gemini-2.5-flash"
+                        class="w-full bg-white/50 border border-slate-200 rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-500/50 transition-all font-mono text-slate-600">
+                </div>
+            </div>
+
+            <!-- Navigation -->
+            <nav class="flex-1 overflow-y-auto px-4 space-y-2 py-2" id="subjectNav">
+                <div class="space-y-1">
+                    <label
+                        class="block text-xs font-semibold text-slate-500 mb-2 px-2 uppercase tracking-wider">選擇科目</label>
+
+                    <button onclick="app.switchSubject('subject1')" id="nav-subject1"
+                        class="w-full text-left px-4 py-3 rounded-xl transition-all duration-200 flex items-center gap-3 group bg-white/40 hover:bg-white/80 border border-transparent hover:border-blue-200 shadow-sm">
+                        <div
+                            class="w-8 h-8 rounded-lg bg-blue-100 text-blue-600 flex items-center justify-center group-hover:scale-110 transition-transform font-bold">
+                            1</div>
+                        <div>
+                            <div class="font-semibold text-sm">應用規劃</div>
+                            <div class="text-[10px] text-slate-500">人工智慧技術</div>
+                        </div>
+                    </button>
+
+                    <button onclick="app.switchSubject('subject2')" id="nav-subject2"
+                        class="w-full text-left px-4 py-3 rounded-xl transition-all duration-200 flex items-center gap-3 group hover:bg-white/80 border border-transparent hover:border-green-200">
+                        <div
+                            class="w-8 h-8 rounded-lg bg-green-100 text-green-600 flex items-center justify-center group-hover:scale-110 transition-transform font-bold">
+                            2</div>
+                        <div>
+                            <div class="font-semibold text-sm">大數據分析</div>
+                            <div class="text-[10px] text-slate-500">處理與應用</div>
+                        </div>
+                    </button>
+
+                    <button onclick="app.switchSubject('subject3')" id="nav-subject3"
+                        class="w-full text-left px-4 py-3 rounded-xl transition-all duration-200 flex items-center gap-3 group hover:bg-white/80 border border-transparent hover:border-purple-200">
+                        <div
+                            class="w-8 h-8 rounded-lg bg-purple-100 text-purple-600 flex items-center justify-center group-hover:scale-110 transition-transform font-bold">
+                            3</div>
+                        <div>
+                            <div class="font-semibold text-sm">機器學習</div>
+                            <div class="text-[10px] text-slate-500">技術與應用</div>
+                        </div>
+                    </button>
+                </div>
+
+                <!-- Add New Subject Button -->
+                <div class="mt-4 px-2">
+                    <button onclick="document.getElementById('newSubjectUploader').click()"
+                        class="w-full py-2 px-4 border-2 border-dashed border-slate-300 rounded-xl flex items-center justify-center gap-2 text-slate-500 hover:text-blue-600 hover:border-blue-400 hover:bg-white/50 transition-all group">
+                        <svg xmlns="http://www.w3.org/2000/svg"
+                            class="h-5 w-5 group-hover:scale-110 transition-transform" fill="none" viewBox="0 0 24 24"
+                            stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                        </svg>
+                        <span class="text-sm font-medium">新增科目 (PDF -> MindMap)</span>
+                    </button>
+                    <input type="file" id="newSubjectUploader" accept="application/pdf" class="hidden">
+                </div>
+
+                <!-- File Upload Area for Current Subject -->
+                <div class="mt-8 px-2" id="uploadSection">
+                    <label class="block text-xs font-semibold text-slate-500 mb-2 uppercase tracking-wider">學習指引
+                        (Context)</label>
+                    <div class="relative group">
+                        <input type="file" id="pdfUploader" accept="application/pdf"
+                            class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10" disabled>
+                        <div
+                            class="bg-white/40 border-2 border-dashed border-slate-300 rounded-xl p-4 text-center transition-all group-hover:border-blue-400 group-hover:bg-white/60">
+                            <svg xmlns="http://www.w3.org/2000/svg"
+                                class="h-6 w-6 mx-auto text-slate-400 mb-2 group-hover:text-blue-500" fill="none"
+                                viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                            </svg>
+                            <p class="text-xs text-slate-600 font-medium" id="uploadText">選擇 PDF 檔案</p>
+                            <p class="text-[10px] text-slate-400 mt-1">提供 AI 參考文件</p>
+                        </div>
+                    </div>
+                    <div id="fileStatus"
+                        class="mt-2 text-[10px] text-emerald-600 font-medium hidden flex items-center gap-1">
+                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7">
+                            </path>
+                        </svg>
+                        <span>檔案已載入</span>
+                    </div>
+                </div>
+            </nav>
+
+            <!-- Footer -->
+            <div class="p-4 border-t border-white/50 text-center">
+                <p class="text-[10px] text-slate-400">Powered by Google Gemini</p>
+            </div>
+        </div>
+    </aside>
+
+    <!-- Collapsed Left Sidebar Button -->
+    <button id="sidebarToggleBtn"
+        class="hidden fixed left-0 top-1/2 -translate-y-1/2 z-30 bg-blue-600 text-white p-2 rounded-r-lg shadow-lg hover:bg-blue-700 transition-all"
+        onclick="app.toggleSidebar()">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+            <path fill-rule="evenodd"
+                d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z"
+                clip-rule="evenodd" />
+        </svg>
+    </button>
+
+    <!-- Main Content - Knowledge Map (Always Visible) -->
+    <main class="flex-1 flex flex-col relative overflow-hidden">
+        <!-- Map Title -->
+        <div class="absolute top-4 left-4 z-10 pointer-events-none">
+            <div class="glass rounded-xl px-4 py-2 shadow-lg pointer-events-auto">
+                <h2 class="text-sm font-semibold text-slate-700">知識架構圖</h2>
+            </div>
+        </div>
+
+        <!-- Knowledge Map -->
+        <div class="flex-1 w-full h-full bg-white/30 backdrop-blur-sm relative">
+            <div class="w-full h-full" id="markmap-container">
+                <svg id="markmap" class="w-full h-full"></svg>
+            </div>
+
+            <!-- Map Controls -->
+            <div class="absolute bottom-6 left-1/2 -translate-x-1/2 flex gap-2 z-10">
+                <div class="glass p-1.5 rounded-lg shadow-lg flex gap-1">
+                    <button onclick="app.setFoldAll(false)"
+                        class="p-2 hover:bg-blue-50 text-slate-600 rounded-md transition-colors" title="全部展開">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
                             <path fill-rule="evenodd"
-                                d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                                d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-11a1 1 0 10-2 0v2H7a1 1 0 100 2h2v2a1 1 0 102 0v-2h2a1 1 0 100-2h-2V7z"
+                                clip-rule="evenodd" />
+                        </svg>
+                    </button>
+                    <button onclick="app.setFoldAll(true)"
+                        class="p-2 hover:bg-blue-50 text-slate-600 rounded-md transition-colors" title="全部縮合">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                            <path fill-rule="evenodd" d="M3 10a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z"
+                                clip-rule="evenodd" />
+                        </svg>
+                    </button>
+                    <div class="w-px h-6 bg-slate-200"></div>
+                    <button onclick="app.fitMap()"
+                        class="p-2 hover:bg-blue-50 text-slate-600 rounded-md transition-colors" title="適合視窗大小">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                            <path fill-rule="evenodd"
+                                d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4z"
                                 clip-rule="evenodd" />
                         </svg>
                     </button>
                 </div>
-                <p id="keyStatus" class="text-[10px] text-slate-400 mt-1 pl-1">Key 儲存於瀏覽器本地端</p>
             </div>
 
-            <!-- Model Selector -->
-            <div id="modelSection" class="relative">
-                <label class="block text-xs font-semibold text-slate-500 mb-2 uppercase tracking-wider">使用模型
-                    (Model ID)</label>
-                <input type="text" id="modelInput" value="gemini-2.5-flash" placeholder="例如: gemini-2.5-flash"
-                    class="w-full bg-white/50 border border-slate-200 rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-500/50 transition-all font-mono text-slate-600">
-            </div>
-        </div>
-
-        <!-- Navigation -->
-        <nav class="flex-1 overflow-y-auto px-4 space-y-2 py-2" id="subjectNav">
-            <div class="space-y-1">
-                <label
-                    class="block text-xs font-semibold text-slate-500 mb-2 px-2 uppercase tracking-wider">選擇科目</label>
-
-                <button onclick="app.switchSubject('subject1')" id="nav-subject1"
-                    class="w-full text-left px-4 py-3 rounded-xl transition-all duration-200 flex items-center gap-3 group bg-white/40 hover:bg-white/80 border border-transparent hover:border-blue-200 shadow-sm">
-                    <div
-                        class="w-8 h-8 rounded-lg bg-blue-100 text-blue-600 flex items-center justify-center group-hover:scale-110 transition-transform font-bold">
-                        1</div>
-                    <div>
-                        <div class="font-semibold text-sm">應用規劃</div>
-                        <div class="text-[10px] text-slate-500">人工智慧技術</div>
-                    </div>
-                </button>
-
-                <button onclick="app.switchSubject('subject2')" id="nav-subject2"
-                    class="w-full text-left px-4 py-3 rounded-xl transition-all duration-200 flex items-center gap-3 group hover:bg-white/80 border border-transparent hover:border-green-200">
-                    <div
-                        class="w-8 h-8 rounded-lg bg-green-100 text-green-600 flex items-center justify-center group-hover:scale-110 transition-transform font-bold">
-                        2</div>
-                    <div>
-                        <div class="font-semibold text-sm">大數據分析</div>
-                        <div class="text-[10px] text-slate-500">處理與應用</div>
-                    </div>
-                </button>
-
-                <button onclick="app.switchSubject('subject3')" id="nav-subject3"
-                    class="w-full text-left px-4 py-3 rounded-xl transition-all duration-200 flex items-center gap-3 group hover:bg-white/80 border border-transparent hover:border-purple-200">
-                    <div
-                        class="w-8 h-8 rounded-lg bg-purple-100 text-purple-600 flex items-center justify-center group-hover:scale-110 transition-transform font-bold">
-                        3</div>
-                    <div>
-                        <div class="font-semibold text-sm">機器學習</div>
-                        <div class="text-[10px] text-slate-500">技術與應用</div>
-                    </div>
-                </button>
-            </div>
-
-            <!-- Add New Subject Button -->
-            <div class="mt-4 px-2">
-                <button onclick="document.getElementById('newSubjectUploader').click()"
-                    class="w-full py-2 px-4 border-2 border-dashed border-slate-300 rounded-xl flex items-center justify-center gap-2 text-slate-500 hover:text-blue-600 hover:border-blue-400 hover:bg-white/50 transition-all group">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 group-hover:scale-110 transition-transform"
-                        fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
-                    </svg>
-                    <span class="text-sm font-medium">新增科目 (PDF -> MindMap)</span>
-                </button>
-                <input type="file" id="newSubjectUploader" accept="application/pdf" class="hidden">
-            </div>
-
-            <!-- File Upload Area for Current Subject -->
-            <div class="mt-8 px-2" id="uploadSection">
-                <label class="block text-xs font-semibold text-slate-500 mb-2 uppercase tracking-wider">學習指引
-                    (Context)</label>
-                <div class="relative group">
-                    <input type="file" id="pdfUploader" accept="application/pdf"
-                        class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10" disabled>
-                    <div
-                        class="bg-white/40 border-2 border-dashed border-slate-300 rounded-xl p-4 text-center transition-all group-hover:border-blue-400 group-hover:bg-white/60">
-                        <svg xmlns="http://www.w3.org/2000/svg"
-                            class="h-6 w-6 mx-auto text-slate-400 mb-2 group-hover:text-blue-500" fill="none"
-                            viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
-                        </svg>
-                        <p class="text-xs text-slate-600 font-medium" id="uploadText">選擇 PDF 檔案</p>
-                        <p class="text-[10px] text-slate-400 mt-1">提供 AI 參考文件</p>
-                    </div>
-                </div>
-                <div id="fileStatus"
-                    class="mt-2 text-[10px] text-emerald-600 font-medium hidden flex items-center gap-1">
-                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-                    </svg>
-                    <span>檔案已載入</span>
-                </div>
-            </div>
-        </nav>
-
-        <!-- Footer -->
-        <div class="p-4 border-t border-white/50 text-center">
-            <p class="text-[10px] text-slate-400">Powered by Google Gemini</p>
-        </div>
-    </aside>
-
-    <!-- Main Content -->
-    <main class="flex-1 flex flex-col relative overflow-hidden">
-        <!-- Floating Header / Tabs -->
-        <div class="absolute top-4 left-4 right-4 z-10 flex justify-between items-start pointer-events-none">
-            <div class="glass rounded-xl p-1 flex gap-1 pointer-events-auto shadow-lg" id="tabContainer">
-                <button onclick="app.switchTab('map')" id="tab-map"
-                    class="px-4 py-2 rounded-lg text-sm font-medium bg-blue-100 text-blue-700 shadow-sm transition-all">
-                    知識架構圖
-                </button>
-                <button onclick="app.switchTab('chat')" id="tab-chat"
-                    class="px-4 py-2 rounded-lg text-sm font-medium hover:bg-white/50 text-slate-600 transition-all flex gap-2 items-center">
-                    <span>AI 導師</span>
-                    <span class="bg-blue-600 text-white text-[10px] px-1.5 py-0.5 rounded-full hidden"
-                        id="chatBadge">新訊息</span>
-                </button>
-            </div>
-        </div>
-
-        <!-- View: Knowledge Map -->
-        <div id="view-map" class="flex-1 w-full h-full bg-white/30 backdrop-blur-sm transition-opacity duration-300">
-            <div class="w-full h-full" id="markmap-container">
-                <svg id="markmap" class="w-full h-full"></svg>
-            </div>
-            <!-- Floating Node Action Context Menu (Hidden by default) -->
+            <!-- Floating Node Action Context Menu -->
             <div id="nodeContextMenu"
                 class="absolute hidden glass rounded-lg shadow-xl p-2 z-50 min-w-[150px] transform transition-all scale-95 opacity-0">
                 <div class="text-xs font-bold text-slate-500 px-2 py-1 border-b border-slate-200 mb-1"
@@ -305,187 +358,80 @@
                 </button>
             </div>
         </div>
+    </main>
 
-        <!-- View: AI Chat -->
-        <div id="view-chat" class="hidden flex-1 w-full h-full bg-white/50 flex flex-col pt-16">
+    <!-- Right Sidebar - AI Tutor -->
+    <aside class="glass flex flex-col border-l border-white/50 z-20 shadow-xl transition-all duration-300"
+        id="chatSidebar" style="width: 400px;">
+        <!-- Header with Collapse Button -->
+        <div class="p-4 border-b border-white/50 flex justify-between items-center">
+            <h2 class="text-lg font-bold text-slate-700">AI 導師</h2>
+            <button onclick="app.toggleChatSidebar()" class="text-slate-400 hover:text-blue-500" title="收合 AI 導師">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                    <path fill-rule="evenodd"
+                        d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z"
+                        clip-rule="evenodd" />
+                </svg>
+            </button>
+        </div>
+
+        <!-- Chat Content -->
+        <div id="chatSidebarContent" class="flex-1 flex flex-col overflow-hidden">
             <!-- Chat Messages -->
-            <div id="chatHistory" class="flex-1 overflow-y-auto px-10 py-4 space-y-6">
+            <div id="chatHistory" class="flex-1 overflow-y-auto px-4 py-4 space-y-4">
                 <!-- Welcome Message -->
-                <div class="flex gap-4">
+                <div class="flex gap-3">
                     <div
-                        class="w-8 h-8 rounded-full bg-gradient-to-tr from-blue-500 to-purple-500 flex-shrink-0 flex items-center justify-center text-white font-bold text-xs">
+                        class="w-7 h-7 rounded-full bg-gradient-to-tr from-blue-500 to-purple-500 flex-shrink-0 flex items-center justify-center text-white font-bold text-xs">
                         AI</div>
                     <div
-                        class="max-w-2xl bg-white rounded-2xl rounded-tl-none p-4 shadow-sm text-sm leading-relaxed text-slate-700 border border-slate-100">
-                        你好！我是你的 AI 導師。歡迎上傳學習指引 PDF，或是在知識架構圖中點擊任何主題，讓我為你解說！
+                        class="flex-1 bg-white rounded-2xl rounded-tl-none p-3 shadow-sm text-sm leading-relaxed text-slate-700 border border-slate-100">
+                        你好！我是你的 AI 導師。歡迎上傳學習指引 PDF，或點擊知識架構圖中的任何主題，讓我為你解說！
                     </div>
                 </div>
             </div>
 
             <!-- Input Area -->
-            <div class="p-6">
-                <div class="max-w-3xl mx-auto relative glass rounded-2xl shadow-xl p-2 flex gap-2 items-end">
+            <div class="p-4 border-t border-white/50">
+                <div class="relative glass rounded-xl shadow-lg p-2 flex gap-2 items-end">
                     <textarea id="chatInput" rows="1" placeholder="問點什麼..."
-                        class="flex-1 bg-transparent border-none focus:ring-0 text-slate-700 placeholder:text-slate-400 resize-none py-3 px-3 max-h-32 text-sm"></textarea>
-
+                        class="flex-1 bg-transparent border-none focus:ring-0 text-slate-700 placeholder:text-slate-400 resize-none py-2 px-2 max-h-32 text-sm"></textarea>
                     <button onclick="app.sendMessage()" id="sendBtn"
-                        class="p-2 mb-1 bg-blue-600 hover:bg-blue-700 text-white rounded-xl shadow-lg shadow-blue-500/30 transition-all disabled:opacity-50 disabled:cursor-not-allowed">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                        class="p-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg shadow-lg shadow-blue-500/30 transition-all disabled:opacity-50">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
                             <path
                                 d="M10.894 2.553a1 1 0 00-1.788 0l-7 14a1 1 0 001.169 1.409l5-1.429A1 1 0 009 15.571V11a1 1 0 112 0v4.571a1 1 0 00.725.962l5 1.428a1 1 0 001.17-1.408l-7-14z" />
                         </svg>
                     </button>
                 </div>
-                <p class="text-center text-[10px] text-slate-400 mt-2">AI 模型可能會犯錯，請以官方教材為準。</p>
+                <p class="text-center text-[9px] text-slate-400 mt-2">AI 可能會犯錯，請以官方教材為準</p>
             </div>
         </div>
-    </main>
+    </aside>
+
+    <!-- Collapsed Right Sidebar Button -->
+    <button id="chatSidebarToggleBtn"
+        class="hidden fixed right-0 top-1/2 -translate-y-1/2 z-30 bg-purple-600 text-white p-2 rounded-l-lg shadow-lg hover:bg-purple-700 transition-all"
+        onclick="app.toggleChatSidebar()">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+            <path fill-rule="evenodd"
+                d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z"
+                clip-rule="evenodd" />
+        </svg>
+    </button>
 
     <!-- App Logic -->
+    <script src="subjects.js"></script>
     <script>
-        // DATA
-        const SUBJECTS = {
-            subject1: {
-                title: "科目1：應用規劃",
-                color: "blue",
-                markdown: `# 科目1: 人工智慧技術應用規劃
-
-## 1. AI 基礎認知
-- **人工智慧定義**: 模擬人類智慧的電腦系統
-- **發展歷程**: 
-  - 規則式 AI -> 機器學習 -> 深度學習
-- **強/弱 AI**:
-  - Weak AI: 專注單一任務 (如 AlphaGo)
-  - Strong AI: 具備人類般通用智慧 (尚未實現)
-- **生成式 AI (GenAI)**: LLM, Diffusion Models
-
-## 2. AI 專案規劃流程
-- **需求訪談與問題定義**:
-  - 了解痛點 (Pain Points)
-  - SMART 原則設定目標
-- **可行性評估 (Feasibility)**:
-  - 技術可行性
-  - 數據可用性
-  - 經濟效益 (ROI)
-- **專案階段**:
-  - POC (概念驗證)
-  - Pilot (試點)
-  - Production (正式上線)
-
-## 3. 法律、倫理與風險
-- **隱私保護**:
-  - 去識別化 (De-identification)
-  - 歐盟 GDPR / 台灣個資法
-- **AI 倫理**:
-  - 公平性 (Fairness): 避免演算法偏見
-  - 可解釋性 (Explainability/XAI)
-  - 透明度
-- **資安風險**: 對抗式攻擊 (Adversarial Attacks)
-
-## 4. 領域應用案例
-- **智慧製造**: 預防性維護 (PdM), 瑕疵檢測 (AOI)
-- **智慧金融**: 信用評分, 詐欺偵測, 智能客服
-- **智慧醫療**: 醫學影像分析, 藥物開發
-- **智慧零售**: 推薦系統, 需求預測`
-            },
-            subject2: {
-                title: "科目2：大數據分析",
-                color: "green",
-                markdown: `# 科目2: 大數據處理分析與應用
-
-## 1. 資料工程架構
-- **資料類型**:
-  - 結構化 (Structured): 表格, SQL
-  - 半結構化 (Semi-structured): JSON, XML, Log
-  - 非結構化 (Unstructured): 文字, 影像, 音訊
-- **大數據特徵 (5V)**:
-  - Volume (量), Velocity (速), Variety (樣), Veracity (真), Value (值)
-- **資料儲存**:
-  - 關聯式資料庫 (RDBMS)
-  - NoSQL (MongoDB, Cassandra)
-  - Data Warehouse (倉儲) vs Data Lake (湖)
-
-## 2. 資料前處理 (Data Preprocessing)
-- **資料清洗 (Cleaning)**:
-  - 缺失值 (Missing Data): 刪除、平均補值、插值
-  - 離群值 (Outliers): 盒鬚圖偵測、Z-Score
-- **資料轉換**:
-  - 正規化 (Normalization): 0-1 scaling
-  - 標準化 (Standardization): Z-score scaling
-  - One-Hot Encoding (獨熱編碼)
-
-## 3. 探索式資料分析 (EDA)
-- **統計指標**:
-  - 集中趨勢: 平均數, 中位數, 眾數
-  - 離散程度: 標準差, 變異數, 四分位距 (IQR)
-- **關聯分析**: Pearson 相關係數 (-1 ~ 1)
-
-## 4. 資料視覺化 (Visualization)
-- **比較**: 長條圖 (Bar Chart)
-- **分佈**: 直方圖 (Histogram), 盒鬚圖 (Box Plot)
-- **關聯**: 散佈圖 (Scatter Plot)
-- **組成**: 圓餅圖 (Pie Chart)
-- **工具**: Matplotlib, Seaborn, Tableau, PowerBI`
-            },
-            subject3: {
-                title: "科目3：機器學習",
-                color: "purple",
-                markdown: `# 科目3: 機器學習技術與應用
-
-## 1. 機器學習流程 (ML Pipeline)
-- **資料收集與標註**: Labeling
-- **特徵工程**: Feature Selection, Dimensionality Reduction
-- **模型訓練**: Training / Validation
-- **模型測試與部署**: Testing / Deployment
-
-## 2. 學習演算法分類
-- **監督式學習 (Supervised)**:
-  - *迴歸 (Regression)*: 預測連續數值 (房價, 溫度)
-    - Linear Regression
-  - *分類 (Classification)*: 預測類別 (貓/狗, 垃圾郵件)
-    - Decision Tree, Random Forest
-    - SVM (支援向量機)
-    - Logistic Regression
-- **非監督式學習 (Unsupervised)**:
-  - *分群 (Clustering)*: K-Means, DBSCAN
-  - *降維 (Dimensionality Reduction)*: PCA (主成分分析)
-- **強化學習 (Reinforcement)**: Agent, Environment, Reward
-
-## 3. 深度學習 (Deep Learning)
-- **基礎架構**: Perceptron, MLP (多層感知機)
-- **CNN (卷積神經網路)**:
-  - 應用: 影像辨識 (Image Recognition)
-  - 結構: Convolution Layer, Pooling Layer
-- **RNN (循環神經網路)**:
-  - 應用: 自然語言處理 (NLP), 時間序列
-  - 變體: LSTM, GRU
-- **Transformer**: Attention Mechanism, BERT, GPT
-
-## 4. 模型評估指標
-- **分類指標**:
-  - 混淆矩陣 (Confusion Matrix): TP, TN, FP, FN
-  - Accuracy (準確率)
-  - Precision (精確率) vs Recall (召回率)
-  - F1-Score (調和平均)
-  - ROC Curve / AUC
-- **迴歸指標**:
-  - MSE (均方誤差)
-  - RMSE
-  - MAE (平均絕對誤差)
-- **常見問題**:
-  - Overfitting (過度擬合): 訓練好但測試差 -> Regularization, Dropout
-  - Underfitting (低度擬合): 模型太簡單 -> 增加特徵, 加深模型`
-            }
-        };
-
         // CORE APP
         const app = {
             currentSubject: 'subject1',
-            currentTab: 'map',
             apiKey: localStorage.getItem('gemini_key') || '',
             mm: null,
             selectedNode: null,
             fileData: null,
+            sidebarCollapsed: false,
+            chatSidebarCollapsed: false,
 
             init() {
                 // UI Init
@@ -635,25 +581,43 @@
                 document.getElementById('fileStatus').classList.add('hidden');
             },
 
-            switchTab(tab) {
-                this.currentTab = tab;
-                document.getElementById('view-map').classList.toggle('hidden', tab !== 'map');
-                document.getElementById('view-chat').classList.toggle('hidden', tab !== 'chat');
+            toggleSidebar() {
+                const sidebar = document.getElementById('sidebar');
+                const toggleBtn = document.getElementById('sidebarToggleBtn');
+                const sidebarContent = document.getElementById('sidebarContent');
 
-                const btnMap = document.getElementById('tab-map');
-                const btnChat = document.getElementById('tab-chat');
+                this.sidebarCollapsed = !this.sidebarCollapsed;
 
-                if (tab === 'map') {
-                    btnMap.classList.add('bg-blue-100', 'text-blue-700', 'shadow-sm');
-                    btnMap.classList.remove('text-slate-600', 'hover:bg-white/50');
-                    btnChat.classList.remove('bg-blue-100', 'text-blue-700', 'shadow-sm');
-                    btnChat.classList.add('text-slate-600', 'hover:bg-white/50');
+                if (this.sidebarCollapsed) {
+                    sidebar.style.width = '0';
+                    sidebar.style.padding = '0';
+                    sidebarContent.style.display = 'none';
+                    toggleBtn.classList.remove('hidden');
                 } else {
-                    btnChat.classList.add('bg-blue-100', 'text-blue-700', 'shadow-sm');
-                    btnChat.classList.remove('text-slate-600', 'hover:bg-white/50');
-                    btnMap.classList.remove('bg-blue-100', 'text-blue-700', 'shadow-sm');
-                    btnMap.classList.add('text-slate-600', 'hover:bg-white/50');
-                    document.getElementById('chatBadge').classList.add('hidden');
+                    sidebar.style.width = '320px';
+                    sidebar.style.padding = '';
+                    sidebarContent.style.display = '';
+                    toggleBtn.classList.add('hidden');
+                }
+            },
+
+            toggleChatSidebar() {
+                const chatSidebar = document.getElementById('chatSidebar');
+                const toggleBtn = document.getElementById('chatSidebarToggleBtn');
+                const chatContent = document.getElementById('chatSidebarContent');
+
+                this.chatSidebarCollapsed = !this.chatSidebarCollapsed;
+
+                if (this.chatSidebarCollapsed) {
+                    chatSidebar.style.width = '0';
+                    chatSidebar.style.padding = '0';
+                    chatContent.style.display = 'none';
+                    toggleBtn.classList.remove('hidden');
+                } else {
+                    chatSidebar.style.width = '400px';
+                    chatSidebar.style.padding = '';
+                    chatContent.style.display = '';
+                    toggleBtn.classList.add('hidden');
                 }
             },
 
@@ -661,27 +625,64 @@
                 const { Markmap, Transformer } = window.markmap;
                 const transformer = new Transformer();
                 const { root } = transformer.transform(markdown);
+                this.root = root; // Save root for reuse
+
+                // Default: Collapse All (Recursive)
+                // This ensures that when expanding a node, its children remain closed
+                const foldRecursively = (node) => {
+                    node.payload = node.payload || {};
+                    node.payload.fold = 1; // 1 = Folded
+                    if (node.children) {
+                        node.children.forEach(foldRecursively);
+                    }
+                };
+
+                foldRecursively(this.root);
 
                 if (this.mm) {
                     this.mm.setData(root);
                     this.mm.fit();
                 } else {
                     this.mm = Markmap.create('#markmap', {
-                        embedGlobalCSS: true, scrollForPan: true, zoom: true,
+                        embedGlobalCSS: true,
+                        scrollForPan: false,
+                        zoom: true,
+                        pan: true
                     }, root);
-                }
 
-                setTimeout(() => {
-                    const nodes = document.querySelectorAll('.markmap-node');
-                    nodes.forEach(node => {
-                        node.style.cursor = 'pointer';
-                        node.onclick = (e) => {
+                    // Use event delegation to handle clicks on all nodes (including dynamically created ones)
+                    const container = document.getElementById('markmap-container');
+                    container.addEventListener('click', (e) => {
+                        const node = e.target.closest('.markmap-node');
+                        if (node) {
                             e.stopPropagation();
                             const text = node.textContent;
                             this.showContextMenu(e.pageX, e.pageY, text);
-                        };
+                        }
                     });
-                }, 500);
+                }
+            },
+
+            setFoldAll(collapsed) {
+                if (!this.mm || !this.root) return;
+
+                const walk = (node) => {
+                    node.payload = node.payload || {};
+                    // If collapsing: fold=1. If expanding: fold=0.
+                    node.payload.fold = collapsed ? 1 : 0;
+                    if (node.children) {
+                        node.children.forEach(walk);
+                    }
+                };
+
+                walk(this.root);
+
+                this.mm.setData(this.root);
+                this.mm.fit();
+            },
+
+            fitMap() {
+                if (this.mm) this.mm.fit();
             },
 
             showContextMenu(x, y, text) {
@@ -718,7 +719,6 @@
                     document.getElementById('fileStatus').classList.remove('hidden');
                     document.getElementById('uploadText').textContent = file.name;
                     this.addChatMessage('system', `檔案 ${file.name} 已載入，您可以開始針對內容提問！`);
-                    this.switchTab('chat');
                 };
                 reader.readAsDataURL(file);
             },
@@ -733,7 +733,6 @@
 
                 const loadingId = 'loading-' + Date.now();
                 this.addChatMessage('system', `正在分析 ${file.name} 並生成知識架構圖，請稍候...`, loadingId);
-                this.switchTab('chat');
 
                 const reader = new FileReader();
                 reader.onload = async (e) => {
@@ -854,7 +853,6 @@
 
             async askAI(mode) {
                 this.hideContextMenu();
-                this.switchTab('chat');
                 let prompt = '';
                 if (mode === 'explain') {
                     prompt = `請解釋「${this.selectedNode}」這個概念，特別是在 ${SUBJECTS[this.currentSubject].title} 的領域中。請用繁體中文回答，簡單易懂。`;
