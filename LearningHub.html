@@ -219,6 +219,19 @@
                 </button>
             </div>
 
+            <!-- Add New Subject Button -->
+            <div class="mt-4 px-2">
+                <button onclick="document.getElementById('newSubjectUploader').click()"
+                    class="w-full py-2 px-4 border-2 border-dashed border-slate-300 rounded-xl flex items-center justify-center gap-2 text-slate-500 hover:text-blue-600 hover:border-blue-400 hover:bg-white/50 transition-all group">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 group-hover:scale-110 transition-transform"
+                        fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                    </svg>
+                    <span class="text-sm font-medium">新增科目 (PDF -> MindMap)</span>
+                </button>
+                <input type="file" id="newSubjectUploader" accept="application/pdf" class="hidden">
+            </div>
+
             <!-- File Upload Area for Current Subject -->
             <div class="mt-8 px-2" id="uploadSection">
                 <label class="block text-xs font-semibold text-slate-500 mb-2 uppercase tracking-wider">學習指引
@@ -517,6 +530,11 @@
                     }
                 });
 
+                // New Subject Uploader Listener
+                document.getElementById('newSubjectUploader').addEventListener('change', (e) => {
+                    this.handleNewSubjectUpload(e.target.files[0]);
+                });
+
                 // Auto Start Tour if no key
                 setTimeout(() => {
                     if (!this.apiKey) {
@@ -703,6 +721,109 @@
                     this.switchTab('chat');
                 };
                 reader.readAsDataURL(file);
+            },
+
+            async handleNewSubjectUpload(file) {
+                if (!file) return;
+                if (!this.apiKey) {
+                    alert('請先設定 API Key');
+                    this.startTour();
+                    return;
+                }
+
+                const loadingId = 'loading-' + Date.now();
+                this.addChatMessage('system', `正在分析 ${file.name} 並生成知識架構圖，請稍候...`, loadingId);
+                this.switchTab('chat');
+
+                const reader = new FileReader();
+                reader.onload = async (e) => {
+                    const base64Data = e.target.result.split(',')[1];
+                    const filePart = {
+                        inlineData: {
+                            data: base64Data,
+                            mimeType: file.type
+                        }
+                    };
+
+                    const prompt = `
+                        請閱讀這份文件，並將其核心內容整理成一個詳細的 Markdown 格式的心智圖 (Mind Map)。
+                        
+                        要求：
+                        1. 根節點是文件的標題或主要主題。
+                        2. 結構要清晰，包含主要章節和關鍵概念。
+                        3. 使用繁體中文。
+                        4. 格式必須是標準的 Markdown 列表形式 (使用 #, -, 縮排)。
+                        5. 不需要開頭的問候語或結尾，直接輸出 Markdown 內容。
+                    `;
+
+                    try {
+                        const { GoogleGenerativeAI } = document.querySelector('script[type="importmap"]').textContent
+                            ? { GoogleGenerativeAI: (await import('https://esm.run/@google/generative-ai')).GoogleGenerativeAI }
+                            : window;
+
+                        const genAI = new GoogleGenerativeAI(this.apiKey);
+                        const model = genAI.getGenerativeModel({ model: document.getElementById('modelInput').value || 'gemini-2.5-flash' });
+
+                        const result = await model.generateContent([filePart, prompt]);
+                        const response = await result.response;
+                        const text = response.text();
+
+                        // Clean up markdown code blocks if present
+                        const cleanMarkdown = text.replace(/```markdown/g, '').replace(/```/g, '').trim();
+
+                        const title = file.name.replace('.pdf', '');
+                        this.addNewSubject(title, cleanMarkdown);
+
+                        const loadingMsg = document.getElementById(loadingId);
+                        if (loadingMsg) loadingMsg.innerHTML = `✅ ${title} 已新增至科目列表！`;
+
+                    } catch (err) {
+                        const loadingMsg = document.getElementById(loadingId);
+                        if (loadingMsg) loadingMsg.innerHTML = `<span class="text-red-500">生成失敗: ${err.message}</span>`;
+                        console.error(err);
+                    }
+                    // Reset input
+                    document.getElementById('newSubjectUploader').value = '';
+                };
+                reader.readAsDataURL(file);
+            },
+
+            addNewSubject(title, markdown) {
+                const id = 'subject-' + Date.now();
+                // Pick a random color
+                const colors = ['pink', 'orange', 'teal', 'indigo', 'cyan'];
+                const color = colors[Math.floor(Math.random() * colors.length)];
+
+                SUBJECTS[id] = {
+                    title: title,
+                    color: color,
+                    markdown: markdown
+                };
+
+                const navContainer = document.querySelector('#subjectNav > div');
+                const btn = document.createElement('button');
+                btn.onclick = () => app.switchSubject(id);
+                btn.id = `nav-${id}`;
+                btn.className = `w-full text-left px-4 py-3 rounded-xl transition-all duration-200 flex items-center gap-3 group hover:bg-white/80 border border-transparent hover:border-${color}-200`;
+
+                const number = Object.keys(SUBJECTS).length;
+
+                btn.innerHTML = `
+                    <div class="w-8 h-8 rounded-lg bg-${color}-100 text-${color}-600 flex items-center justify-center group-hover:scale-110 transition-transform font-bold">
+                        ${number}
+                    </div>
+                    <div class="overflow-hidden">
+                        <div class="font-semibold text-sm truncate">${title}</div>
+                        <div class="text-[10px] text-slate-500">AI 生成</div>
+                    </div>
+                `;
+
+                navContainer.appendChild(btn);
+                this.switchSubject(id);
+
+                // Add upload animation
+                btn.classList.add('animate-pulse');
+                setTimeout(() => btn.classList.remove('animate-pulse'), 1000);
             },
 
             async sendMessage() {
