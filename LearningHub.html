@@ -423,19 +423,84 @@
     <!-- App Logic -->
     <script src="subjects.js"></script>
     <script>
+        // --- FILE STORAGE (IndexedDB) ---
+        const DEFAULT_FILES = {
+            'subject1': 'AI應用規劃師(中級)-學習指引-科目1人工智慧技術應用規劃.pdf',
+            'subject2': 'AI應用規劃師(中級)-學習指引-科目2大數據處理分析與應用.pdf',
+            'subject3': 'AI應用規劃師(中級)-學習指引-科目3機器學習技術與應用.pdf'
+        };
+
+        class FileStorage {
+            constructor(dbName = 'LearningHubDB', storeName = 'files') {
+                this.dbName = dbName;
+                this.storeName = storeName;
+                this.db = null;
+            }
+
+            async init() {
+                return new Promise((resolve, reject) => {
+                    const request = indexedDB.open(this.dbName, 1);
+                    request.onerror = (e) => reject(e);
+                    request.onsuccess = (e) => {
+                        this.db = e.target.result;
+                        resolve(this.db);
+                    };
+                    request.onupgradeneeded = (e) => {
+                        const db = e.target.result;
+                        if (!db.objectStoreNames.contains(this.storeName)) {
+                            db.createObjectStore(this.storeName); // Key is subjectId
+                        }
+                    };
+                });
+            }
+
+            async save(subjectId, fileData) {
+                if (!this.db) await this.init();
+                return new Promise((resolve, reject) => {
+                    const transaction = this.db.transaction([this.storeName], 'readwrite');
+                    const store = transaction.objectStore(this.storeName);
+                    const request = store.put(fileData, subjectId);
+                    request.onsuccess = () => resolve();
+                    request.onerror = (e) => reject(e);
+                });
+            }
+
+            async get(subjectId) {
+                if (!this.db) await this.init();
+                return new Promise((resolve, reject) => {
+                    const transaction = this.db.transaction([this.storeName], 'readonly');
+                    const store = transaction.objectStore(this.storeName);
+                    const request = store.get(subjectId);
+                    request.onsuccess = (e) => resolve(e.target.result);
+                    request.onerror = (e) => reject(e);
+                });
+            }
+        }
+
         // CORE APP
         const app = {
             currentSubject: 'subject1',
             apiKey: localStorage.getItem('gemini_key') || '',
-            mm: null,
-            selectedNode: null,
             fileData: null,
             sidebarCollapsed: false,
             chatSidebarCollapsed: false,
+            fileStorage: null,
+            chatSessions: {}, // format: { subjectId: ChatSession }
 
-            init() {
+            async init() {
+                // Init File Storage
+                this.fileStorage = new FileStorage();
+                try {
+                    await this.fileStorage.init();
+                    console.log('FileStorage initialized');
+                } catch (e) {
+                    console.error('FileStorage init failed', e);
+                }
+
                 // UI Init
                 this.updateAuthUI();
+
+                // Initial load: Wait for storage init then switch subject
                 this.switchSubject('subject1');
 
                 // Load Model Preference
@@ -577,8 +642,69 @@
                 activeBtn.classList.add(`bg-${color}-50`, `border-${color}-200`, 'shadow-sm');
 
                 this.renderMap(SUBJECTS[id].markdown);
+
+                // Try load from cache
                 this.fileData = null;
                 document.getElementById('fileStatus').classList.add('hidden');
+                document.getElementById('uploadText').textContent = '點擊上傳 PDF';
+                document.getElementById('uploadText').classList.remove('text-blue-600', 'font-bold');
+
+                if (this.fileStorage) {
+                    this.fileStorage.get(id).then(data => {
+                        if (data) {
+                            this.fileData = data;
+                            this.updateFileStatusUI(true, '已從快取載入檔案');
+                        } else {
+                            // No cache found, check if there is a suggested file
+                            const suggestion = DEFAULT_FILES[id];
+                            if (suggestion) {
+                                document.getElementById('uploadText').textContent = `請上傳: ${suggestion}`;
+                                document.getElementById('uploadText').classList.add('text-slate-500', 'text-xs');
+                            }
+                        }
+                    });
+                }
+
+                // Switch Chat Session & Restore History
+                this.loadChatSession(id);
+            },
+
+            loadChatSession(subjectId) {
+                // Ensure session exists
+                if (!this.chatSessions[subjectId]) {
+                    this.chatSessions[subjectId] = {
+                        history: [],  // UI history (for restoration)
+                        modelHistory: [] // Google Generative AI Content format
+                    };
+
+                    // Add welcome message for new session
+                    const welcomeMsg = { role: 'ai', text: '你好！我是你的 AI 導師。歡迎上傳學習指引 PDF，或點擊知識架構圖中的任何主題，讓我為你解說！' };
+                    this.chatSessions[subjectId].history.push(welcomeMsg);
+                }
+
+                // Clear current UI
+                const container = document.getElementById('chatHistory');
+                container.innerHTML = '';
+
+                // Restore messages
+                const session = this.chatSessions[subjectId];
+                session.history.forEach(msg => {
+                    this.renderChatMessage(msg.role, msg.text, msg.id);
+                });
+            },
+
+            updateFileStatusUI(hasFile, msg) {
+                const status = document.getElementById('fileStatus');
+                const text = document.getElementById('uploadText');
+                if (hasFile) {
+                    status.classList.remove('hidden');
+                    text.textContent = msg || '檔案已就緒';
+                    text.classList.add('text-blue-600', 'font-bold');
+                } else {
+                    status.classList.add('hidden');
+                    text.textContent = '點擊上傳 PDF';
+                    text.classList.remove('text-blue-600', 'font-bold');
+                }
             },
 
             toggleSidebar() {
@@ -716,9 +842,14 @@
                             mimeType: file.type // "application/pdf"
                         }
                     };
-                    document.getElementById('fileStatus').classList.remove('hidden');
-                    document.getElementById('uploadText').textContent = file.name;
-                    this.addChatMessage('system', `檔案 ${file.name} 已載入，您可以開始針對內容提問！`);
+
+                    // Save to cache
+                    if (this.fileStorage) {
+                        this.fileStorage.save(this.currentSubject, this.fileData);
+                    }
+
+                    this.updateFileStatusUI(true, file.name);
+                    this.addChatMessage('system', `檔案 ${file.name} 已載入並快取，您可以開始針對內容提問！`);
                 };
                 reader.readAsDataURL(file);
             },
@@ -771,10 +902,21 @@
                         const cleanMarkdown = text.replace(/```markdown/g, '').replace(/```/g, '').trim();
 
                         const title = file.name.replace('.pdf', '');
-                        this.addNewSubject(title, cleanMarkdown);
+
+
+                        // Create subject and get ID
+                        const newId = this.addNewSubject(title, cleanMarkdown);
+
+                        // Save file context for the new subject
+                        if (this.fileStorage) {
+                            this.fileStorage.save(newId, filePart); // filePart structure matches
+                        }
 
                         const loadingMsg = document.getElementById(loadingId);
-                        if (loadingMsg) loadingMsg.innerHTML = `✅ ${title} 已新增至科目列表！`;
+                        if (loadingMsg) loadingMsg.innerHTML = `✅ ${title} 已新增至科目列表 (檔案已快取)！`;
+
+                        // Auto switch to new subject
+                        this.switchSubject(newId);
 
                     } catch (err) {
                         const loadingMsg = document.getElementById(loadingId);
@@ -799,31 +941,36 @@
                     markdown: markdown
                 };
 
-                const navContainer = document.querySelector('#subjectNav > div');
+                // Add to Nav
+                const nav = document.getElementById('subjectNav');
                 const btn = document.createElement('button');
-                btn.onclick = () => app.switchSubject(id);
                 btn.id = `nav-${id}`;
                 btn.className = `w-full text-left px-4 py-3 rounded-xl transition-all duration-200 flex items-center gap-3 group hover:bg-white/80 border border-transparent hover:border-${color}-200`;
-
-                const number = Object.keys(SUBJECTS).length;
-
+                btn.onclick = () => app.switchSubject(id);
                 btn.innerHTML = `
-                    <div class="w-8 h-8 rounded-lg bg-${color}-100 text-${color}-600 flex items-center justify-center group-hover:scale-110 transition-transform font-bold">
-                        ${number}
-                    </div>
-                    <div class="overflow-hidden">
-                        <div class="font-semibold text-sm truncate">${title}</div>
-                        <div class="text-[10px] text-slate-500">AI 生成</div>
-                    </div>
+                        <div class="w-8 h-8 rounded-lg bg-${color}-100 text-${color}-600 flex items-center justify-center group-hover:scale-110 transition-transform font-bold">New</div>
+                        <div>
+                            <div class="font-semibold text-sm">${title}</div>
+                            <div class="text-[10px] text-slate-500">自定義科目</div>
+                        </div>
                 `;
+                // Insert before the "Add New" button (last child is the div wrapper)
+                // Actually the nav has direct buttons and a div wrapper at the end.
+                // The structure is: 
+                // <div class="space-y-1">...buttons...</div>
+                // <div class="mt-4 px-2">...add button...</div>
+                // Wait, the static HTML structure is:
+                // <nav ...>
+                //    <div class="space-y-1"> ... <selection buttons> ... </div>
+                //    <div class="mt-4 px-2"> ... <add button> ... </div>
 
-                navContainer.appendChild(btn);
-                this.switchSubject(id);
+                const container = nav.querySelector('.space-y-1');
+                container.appendChild(btn);
 
-                // Add upload animation
-                btn.classList.add('animate-pulse');
-                setTimeout(() => btn.classList.remove('animate-pulse'), 1000);
+                return id;
             },
+
+
 
             async sendMessage() {
                 const input = document.getElementById('chatInput');
@@ -881,20 +1028,54 @@
                 const modelInput = document.getElementById('modelInput');
                 let modelName = modelInput.value.trim() || 'gemini-2.5-flash';
 
-                // Disable "Thinking" if supported by the API (though mostly handled by model selection)
-                // We use standard generation config, not requesting thinking config
-                const model = genAI.getGenerativeModel({
-                    model: modelName,
-                    generationConfig: {
-                        // thinking_config: { include_thoughts: false } // Hypothetical param if user meant API level
-                    }
-                });
+                // Get current session history
+                const session = this.chatSessions[this.currentSubject];
 
-                const parts = [];
-                if (this.fileData) parts.push(this.fileData);
-                parts.push({ text: promptText });
+                // Get chat model to resume state
+                const model = genAI.getGenerativeModel({ model: modelName });
 
-                const result = await model.generateContentStream(parts);
+                // Construct history for startChat
+                // Note: File data is best passed in the first proper user message of a session or context.
+                // However, Google GenAI SDK allows `startChat` with history.
+                // We need to inject the file context into the history if it's the first turn, or rely on system instruction (available in some models).
+                // Simplified approach: New chat each time but send history manually? No, that's expensive.
+                // Better approach: Use `startChat` and maintain the `chat` object instance?
+                // JS objects are not persistent across reloads, but session.history is.
+                // Let's reconstruct the chat history for the API call.
+
+                const historyForApi = [...session.modelHistory]; // Clone
+
+                // If this is the *very first* message in this session history and we have a file, prepending it might be tricky in chat mode.
+                // Strategy: If fileData exists, and history is empty, the first message sent will include the file.
+                // If history exists, we assume file context was already established or is not re-sent to save tokens (unless it allows caching).
+                // For simplicity in this "Per Subject" mode: We will re-send file context if it's the first message of the session.
+
+                let chat;
+                if (historyForApi.length === 0 && this.fileData) {
+                    // First turn with file
+                    chat = model.startChat({
+                        history: [
+                            {
+                                role: "user",
+                                parts: [
+                                    this.fileData,
+                                    { text: "這是本課程的學習指引 PDF。請根據這份文件回答我之後的問題。" }
+                                ]
+                            },
+                            {
+                                role: "model",
+                                parts: [{ text: "好的，我已閱讀學習指引。請隨時提問！" }]
+                            }
+                        ]
+                    });
+                } else {
+                    // Normal chat or subsequent turns
+                    chat = model.startChat({
+                        history: historyForApi
+                    });
+                }
+
+                const result = await chat.sendMessageStream(promptText);
 
                 let fullText = '';
                 const bubbleContent = document.getElementById(elementId);
@@ -902,16 +1083,33 @@
                 for await (const chunk of result.stream) {
                     const chunkText = chunk.text();
                     fullText += chunkText;
-                    // Render Markdown incrementally (simple approach: re-render full text)
                     if (bubbleContent) bubbleContent.innerHTML = window.marked.parse(fullText);
 
-                    // Auto-scroll
-                    const history = document.getElementById('chatHistory');
-                    history.scrollTop = history.scrollHeight;
+                    const historyDiv = document.getElementById('chatHistory');
+                    historyDiv.scrollTop = historyDiv.scrollHeight;
+                }
+
+                // Update Session History
+                session.modelHistory = await chat.getHistory();
+
+                // Update UI History Tracking (last AI response)
+                const lastAiMsg = session.history.find(m => m.id === elementId);
+                if (lastAiMsg) {
+                    lastAiMsg.text = fullText;
+                } else {
+                    session.history.push({ role: 'ai', text: fullText, id: elementId });
                 }
             },
 
             addChatMessage(role, text, elementId = null) {
+                // Save to current session state
+                if (this.currentSubject && this.chatSessions[this.currentSubject]) {
+                    this.chatSessions[this.currentSubject].history.push({ role, text, id: elementId });
+                }
+                this.renderChatMessage(role, text, elementId);
+            },
+
+            renderChatMessage(role, text, elementId = null) {
                 const history = document.getElementById('chatHistory');
                 const div = document.createElement('div');
                 div.className = 'flex gap-4 ' + (role === 'user' ? 'flex-row-reverse' : '');
