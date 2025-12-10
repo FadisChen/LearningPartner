@@ -253,29 +253,50 @@
                 <!-- File Upload Area for Current Subject -->
                 <div class="mt-8 px-2" id="uploadSection">
                     <label class="block text-xs font-semibold text-slate-500 mb-2 uppercase tracking-wider">學習指引
-                        (Context)</label>
+                        (可多檔)</label>
                     <div class="relative group">
-                        <input type="file" id="pdfUploader" accept="application/pdf"
+                        <input type="file" id="pdfUploader" accept="application/pdf" multiple
                             class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10" disabled>
                         <div
-                            class="bg-white/40 border-2 border-dashed border-slate-300 rounded-xl p-4 text-center transition-all group-hover:border-blue-400 group-hover:bg-white/60">
+                            class="bg-white/40 border-2 border-dashed border-slate-300 rounded-xl p-3 text-center transition-all group-hover:border-blue-400 group-hover:bg-white/60">
                             <svg xmlns="http://www.w3.org/2000/svg"
-                                class="h-6 w-6 mx-auto text-slate-400 mb-2 group-hover:text-blue-500" fill="none"
+                                class="h-5 w-5 mx-auto text-slate-400 mb-1 group-hover:text-blue-500" fill="none"
                                 viewBox="0 0 24 24" stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                     d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
                             </svg>
-                            <p class="text-xs text-slate-600 font-medium" id="uploadText">選擇 PDF 檔案</p>
-                            <p class="text-[10px] text-slate-400 mt-1">提供 AI 參考文件</p>
+                            <p class="text-xs text-slate-600 font-medium" id="uploadText">點擊上傳 PDF</p>
+                            <p class="text-[10px] text-slate-400 mt-1">支援多檔案上傳</p>
                         </div>
                     </div>
+
+                    <!-- Uploaded Files List -->
+                    <div id="filesList" class="mt-2 space-y-1 max-h-32 overflow-y-auto"></div>
+
                     <div id="fileStatus"
                         class="mt-2 text-[10px] text-emerald-600 font-medium hidden flex items-center gap-1">
                         <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7">
                             </path>
                         </svg>
-                        <span>檔案已載入</span>
+                        <span id="fileStatusText">檔案已載入</span>
+                    </div>
+                </div>
+
+                <!-- Learning Tools -->
+                <div class="mt-6 px-2" id="learningTools">
+                    <label class="block text-xs font-semibold text-slate-500 mb-2 uppercase tracking-wider">學習工具</label>
+                    <div class="space-y-2">
+                        <button onclick="app.generateStudyGuide()"
+                            class="w-full px-3 py-2 bg-gradient-to-r from-purple-500 to-indigo-500 text-white text-xs font-medium rounded-lg hover:from-purple-600 hover:to-indigo-600 transition-all shadow-sm flex items-center justify-center gap-2 disabled:opacity-50"
+                            id="studyGuideBtn" disabled>
+                            <span>📚</span> 生成學習指南
+                        </button>
+                        <button onclick="app.generateSuggestedQuestions()"
+                            class="w-full px-3 py-2 bg-gradient-to-r from-emerald-500 to-teal-500 text-white text-xs font-medium rounded-lg hover:from-emerald-600 hover:to-teal-600 transition-all shadow-sm flex items-center justify-center gap-2 disabled:opacity-50"
+                            id="suggestQuestionsBtn" disabled>
+                            <span>💡</span> 建議問題清單
+                        </button>
                     </div>
                 </div>
             </nav>
@@ -439,7 +460,7 @@
 
             async init() {
                 return new Promise((resolve, reject) => {
-                    const request = indexedDB.open(this.dbName, 1);
+                    const request = indexedDB.open(this.dbName, 2); // Bumped version for schema update
                     request.onerror = (e) => reject(e);
                     request.onsuccess = (e) => {
                         this.db = e.target.result;
@@ -454,26 +475,46 @@
                 });
             }
 
-            async save(subjectId, fileData) {
+            // Save multiple files for a subject
+            async saveFiles(subjectId, filesArray) {
                 if (!this.db) await this.init();
                 return new Promise((resolve, reject) => {
                     const transaction = this.db.transaction([this.storeName], 'readwrite');
                     const store = transaction.objectStore(this.storeName);
-                    const request = store.put(fileData, subjectId);
+                    const request = store.put(filesArray, subjectId);
                     request.onsuccess = () => resolve();
                     request.onerror = (e) => reject(e);
                 });
             }
 
-            async get(subjectId) {
+            // Get files array for a subject
+            async getFiles(subjectId) {
                 if (!this.db) await this.init();
                 return new Promise((resolve, reject) => {
                     const transaction = this.db.transaction([this.storeName], 'readonly');
                     const store = transaction.objectStore(this.storeName);
                     const request = store.get(subjectId);
-                    request.onsuccess = (e) => resolve(e.target.result);
+                    request.onsuccess = (e) => {
+                        const result = e.target.result;
+                        // Migration: if old format (single file object), convert to array
+                        if (result && result.inlineData) {
+                            resolve([{ name: 'Legacy File', data: result }]);
+                        } else {
+                            resolve(result || []);
+                        }
+                    };
                     request.onerror = (e) => reject(e);
                 });
+            }
+
+            // Legacy methods for backward compatibility
+            async save(subjectId, fileData) {
+                return this.saveFiles(subjectId, [{ name: 'File', data: fileData }]);
+            }
+
+            async get(subjectId) {
+                const files = await this.getFiles(subjectId);
+                return files.length > 0 ? files[0].data : null;
             }
         }
 
@@ -481,11 +522,12 @@
         const app = {
             currentSubject: 'subject1',
             apiKey: localStorage.getItem('gemini_key') || '',
-            fileData: null,
+            files: [], // Array of { name: string, data: { inlineData: {...} } }
             sidebarCollapsed: false,
             chatSidebarCollapsed: false,
             fileStorage: null,
             chatSessions: {}, // format: { subjectId: ChatSession }
+            suggestedQuestions: [], // for Phase 4
 
             async init() {
                 // Init File Storage
@@ -514,8 +556,14 @@
                     if (e.key === 'Enter') this.saveKey();
                 });
 
-                document.getElementById('pdfUploader').addEventListener('change', (e) => {
-                    this.handleFileUpload(e.target.files[0]);
+                document.getElementById('pdfUploader').addEventListener('change', async (e) => {
+                    const files = e.target.files;
+                    if (files.length > 0) {
+                        for (const file of files) {
+                            await this.handleFileUpload(file);
+                        }
+                    }
+                    e.target.value = ''; // Reset input to allow re-uploading same file
                 });
 
                 document.getElementById('modelInput').addEventListener('change', (e) => {
@@ -643,25 +691,29 @@
 
                 this.renderMap(SUBJECTS[id].markdown);
 
-                // Try load from cache
-                this.fileData = null;
+                // Reset files for the new subject
+                this.files = [];
                 document.getElementById('fileStatus').classList.add('hidden');
                 document.getElementById('uploadText').textContent = '點擊上傳 PDF';
-                document.getElementById('uploadText').classList.remove('text-blue-600', 'font-bold');
+                document.getElementById('uploadText').classList.remove('text-blue-600', 'font-bold', 'text-slate-500', 'text-xs');
+                this.renderFilesList();
 
+                // Try load files from cache
                 if (this.fileStorage) {
-                    this.fileStorage.get(id).then(data => {
-                        if (data) {
-                            this.fileData = data;
-                            this.updateFileStatusUI(true, '已從快取載入檔案');
+                    this.fileStorage.getFiles(id).then(files => {
+                        if (files && files.length > 0) {
+                            this.files = files;
+                            this.renderFilesList();
+                            this.updateFileStatusUI(true, `已從快取載入 ${files.length} 個檔案`);
                         } else {
                             // No cache found, check if there is a suggested file
                             const suggestion = DEFAULT_FILES[id];
                             if (suggestion) {
-                                document.getElementById('uploadText').textContent = `請上傳: ${suggestion}`;
+                                document.getElementById('uploadText').textContent = `建議上傳: ${suggestion}`;
                                 document.getElementById('uploadText').classList.add('text-slate-500', 'text-xs');
                             }
                         }
+                        this.updateLearningToolsState();
                     });
                 }
 
@@ -779,6 +831,11 @@
                     // Use event delegation to handle clicks on all nodes (including dynamically created ones)
                     const container = document.getElementById('markmap-container');
                     container.addEventListener('click', (e) => {
+                        // Ignore clicks on fold/unfold circles
+                        if (e.target.closest('circle')) {
+                            return; // Let markmap handle the fold/unfold
+                        }
+
                         const node = e.target.closest('.markmap-node');
                         if (node) {
                             e.stopPropagation();
@@ -834,24 +891,89 @@
             async handleFileUpload(file) {
                 if (!file) return;
                 const reader = new FileReader();
-                reader.onload = (e) => {
+                reader.onload = async (e) => {
                     const base64Data = e.target.result.split(',')[1];
-                    this.fileData = {
-                        inlineData: {
-                            data: base64Data,
-                            mimeType: file.type // "application/pdf"
+                    const fileObj = {
+                        name: file.name,
+                        data: {
+                            inlineData: {
+                                data: base64Data,
+                                mimeType: file.type
+                            }
                         }
                     };
 
-                    // Save to cache
-                    if (this.fileStorage) {
-                        this.fileStorage.save(this.currentSubject, this.fileData);
+                    // Check if file already exists
+                    const existingIndex = this.files.findIndex(f => f.name === file.name);
+                    if (existingIndex >= 0) {
+                        this.files[existingIndex] = fileObj; // Replace
+                    } else {
+                        this.files.push(fileObj); // Add new
                     }
 
-                    this.updateFileStatusUI(true, file.name);
-                    this.addChatMessage('system', `檔案 ${file.name} 已載入並快取，您可以開始針對內容提問！`);
+                    // Save all files to cache
+                    if (this.fileStorage) {
+                        await this.fileStorage.saveFiles(this.currentSubject, this.files);
+                    }
+
+                    this.renderFilesList();
+                    this.updateFileStatusUI(true, `${this.files.length} 個檔案已載入`);
+                    this.updateLearningToolsState();
+                    this.addChatMessage('system', `檔案 ${file.name} 已載入並快取！目前共 ${this.files.length} 個參考文件。`);
                 };
                 reader.readAsDataURL(file);
+            },
+
+            async handleMultipleFileUpload(fileList) {
+                for (const file of fileList) {
+                    await this.handleFileUpload(file);
+                }
+            },
+
+            renderFilesList() {
+                const container = document.getElementById('filesList');
+                if (!container) return;
+
+                container.innerHTML = this.files.map((f, idx) => `
+                    <div class="flex items-center gap-2 bg-white/60 rounded-lg px-2 py-1.5 text-xs group">
+                        <svg class="w-3 h-3 text-red-500 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4z" clip-rule="evenodd"/>
+                        </svg>
+                        <span class="truncate flex-1 text-slate-600" title="${f.name}">${f.name}</span>
+                        <button onclick="app.removeFile(${idx})" 
+                            class="opacity-0 group-hover:opacity-100 text-slate-400 hover:text-red-500 transition-all p-0.5"
+                            title="移除檔案">
+                            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                            </svg>
+                        </button>
+                    </div>
+                `).join('');
+            },
+
+            async removeFile(index) {
+                if (index >= 0 && index < this.files.length) {
+                    const removed = this.files.splice(index, 1)[0];
+
+                    // Save updated files to cache
+                    if (this.fileStorage) {
+                        await this.fileStorage.saveFiles(this.currentSubject, this.files);
+                    }
+
+                    this.renderFilesList();
+                    this.updateFileStatusUI(this.files.length > 0, `${this.files.length} 個檔案已載入`);
+                    this.updateLearningToolsState();
+                    this.addChatMessage('system', `已移除 ${removed.name}`);
+                }
+            },
+
+            updateLearningToolsState() {
+                const hasFiles = this.files.length > 0;
+                const hasApiKey = !!this.apiKey;
+                const enabled = hasFiles && hasApiKey;
+
+                document.getElementById('studyGuideBtn').disabled = !enabled;
+                document.getElementById('suggestQuestionsBtn').disabled = !enabled;
             },
 
             async handleNewSubjectUpload(file) {
@@ -1001,10 +1123,44 @@
             async askAI(mode) {
                 this.hideContextMenu();
                 let prompt = '';
+                const hasFiles = this.files.length > 0;
+                const fileContext = hasFiles ? `（請根據已上傳的 ${this.files.length} 份參考文件）` : '';
+
                 if (mode === 'explain') {
-                    prompt = `請解釋「${this.selectedNode}」這個概念，特別是在 ${SUBJECTS[this.currentSubject].title} 的領域中。請用繁體中文回答，簡單易懂。`;
+                    prompt = `請解釋「${this.selectedNode}」這個概念${fileContext}。
+
+要求：
+1. 使用繁體中文，簡單易懂
+2. 說明在 ${SUBJECTS[this.currentSubject].title} 領域中的定義與重要性
+3. 如果參考文件中有相關內容，請標註來源章節
+4. 提供實際應用例子或情境
+5. 長度控制在 200-300 字
+
+請直接開始解釋，不需要開頭問候語。`;
                 } else if (mode === 'quiz') {
-                    prompt = `針對「${this.selectedNode}」這主題，請出一題單選題考我，並附上答案解析。使用繁體中文。`;
+                    prompt = `針對「${this.selectedNode}」這個主題${fileContext}，請出一題單選題考我。
+
+格式要求：
+**題目：** [題目內容]
+
+**選項：**
+(A) [選項A]
+(B) [選項B]
+(C) [選項C]
+(D) [選項D]
+
+---
+
+**正確答案：** [A/B/C/D]
+
+**解析：**
+[詳細說明為什麼這個答案是正確的，以及其他選項為什麼不正確。如果參考文件中有相關內容，請標註來源章節]
+
+注意事項：
+- 題目要有一定難度，能測試真正的理解
+- 選項要有迷惑性，但只有一個正確答案
+- 解析要詳細且有教育意義
+- 使用繁體中文`;
                 }
 
                 this.addChatMessage('user', prompt);
@@ -1045,26 +1201,35 @@
 
                 const historyForApi = [...session.modelHistory]; // Clone
 
-                // If this is the *very first* message in this session history and we have a file, prepending it might be tricky in chat mode.
-                // Strategy: If fileData exists, and history is empty, the first message sent will include the file.
-                // If history exists, we assume file context was already established or is not re-sent to save tokens (unless it allows caching).
-                // For simplicity in this "Per Subject" mode: We will re-send file context if it's the first message of the session.
+                // Build file parts from all uploaded files
+                const fileParts = this.files.map(f => f.data);
+                const fileNames = this.files.map(f => f.name).join('、');
+                const hasFiles = this.files.length > 0;
+
+                // System instruction for citation
+                const systemInstruction = hasFiles ?
+                    `你是一位專業的 AI 學習導師。使用者已上傳以下參考文件：${fileNames}。
+請根據這些文件內容回答問題。回答時請：
+1. 使用繁體中文
+2. 在重要論點後標註來源，格式：「(來源：文件名稱，章節名稱)」
+3. 若無法在文件中找到相關內容，請如實說明
+4. 回答要清晰易懂，適合學習者理解` :
+                    `你是一位專業的 AI 學習導師。請使用繁體中文回答問題，回答要清晰易懂。`;
 
                 let chat;
-                if (historyForApi.length === 0 && this.fileData) {
-                    // First turn with file
+                if (historyForApi.length === 0 && hasFiles) {
+                    // First turn with files - inject file context
+                    const initialParts = [...fileParts, { text: `以上是本課程的學習指引文件（共 ${this.files.length} 份）。請根據這些文件回答我之後的問題，並標註來源章節。` }];
+
                     chat = model.startChat({
                         history: [
                             {
                                 role: "user",
-                                parts: [
-                                    this.fileData,
-                                    { text: "這是本課程的學習指引 PDF。請根據這份文件回答我之後的問題。" }
-                                ]
+                                parts: initialParts
                             },
                             {
                                 role: "model",
-                                parts: [{ text: "好的，我已閱讀學習指引。請隨時提問！" }]
+                                parts: [{ text: `好的，我已閱讀 ${this.files.length} 份學習指引文件。請隨時提問，我會根據文件內容回答並標註來源！` }]
                             }
                         ]
                     });
@@ -1150,8 +1315,105 @@
             removeTypingIndicator() {
                 const el = document.getElementById('typingIndicator');
                 if (el) el.remove();
+            },
+
+            // === Phase 2: Generate Study Guide ===
+            async generateStudyGuide() {
+                if (!this.apiKey || this.files.length === 0) {
+                    alert('請先設定 API Key 並上傳學習指引文件');
+                    return;
+                }
+
+                const btn = document.getElementById('studyGuideBtn');
+                btn.disabled = true;
+                btn.innerHTML = '<span class="animate-spin">⏳</span> 生成中...';
+
+                const prompt = `請根據上傳的學習指引文件，生成一份完整的「學習指南」。
+
+請按照以下格式輸出（使用 Markdown）：
+
+## 📋 文件概覽
+- 簡述這份文件的主題與目標
+
+## 🎯 學習目標
+- 列出 3-5 個主要學習目標
+
+## 📝 重點摘要
+- 整理出 5-10 個核心概念，每個概念用 1-2 句話說明
+- 標註來源章節
+
+## ❓ 常見問題 FAQ
+- 列出 5 個學習者可能會問的問題與簡答
+
+## 📊 考試重點
+- 列出可能出現在考試中的重點項目
+- 標示重要程度（⭐⭐⭐ 必考、⭐⭐ 重要、⭐ 了解即可）
+
+## 📅 建議學習順序
+- 提供建議的學習順序與時間分配
+
+請使用繁體中文，內容要實用且易於理解。`;
+
+                this.addChatMessage('user', '📚 請生成學習指南');
+                const aiBubbleId = 'study-guide-' + Date.now();
+                this.addChatMessage('ai', '<span class="animate-pulse">正在生成學習指南...</span>', aiBubbleId);
+
+                try {
+                    await this.streamGemini(prompt, aiBubbleId);
+                } catch (err) {
+                    const bubble = document.getElementById(aiBubbleId);
+                    if (bubble) bubble.innerHTML = `<span class="text-red-500">生成失敗: ${err.message}</span>`;
+                }
+
+                btn.disabled = false;
+                btn.innerHTML = '<span>📚</span> 生成學習指南';
+            },
+
+            // === Phase 3: Generate Suggested Questions ===
+            async generateSuggestedQuestions() {
+                if (!this.apiKey || this.files.length === 0) {
+                    alert('請先設定 API Key 並上傳學習指引文件');
+                    return;
+                }
+
+                const btn = document.getElementById('suggestQuestionsBtn');
+                btn.disabled = true;
+                btn.innerHTML = '<span class="animate-spin">⏳</span> 生成中...';
+
+                const prompt = `請根據上傳的學習指引文件，生成 10 個「建議問題」，這些問題應該能幫助學習者深入理解內容。
+
+請按照以下格式輸出（每個問題一行）：
+1. [基礎] 問題內容
+2. [進階] 問題內容
+3. [應用] 問題內容
+...
+
+問題類型說明：
+- [基礎]：確認基本概念理解
+- [進階]：深入分析或比較
+- [應用]：實際應用或案例分析
+
+請使用繁體中文，問題要具體且有學習價值。不需要提供答案。`;
+
+                this.addChatMessage('user', '💡 請生成建議問題清單');
+                const aiBubbleId = 'suggested-questions-' + Date.now();
+                this.addChatMessage('ai', '<span class="animate-pulse">正在生成建議問題...</span>', aiBubbleId);
+
+                try {
+                    await this.streamGemini(prompt, aiBubbleId);
+
+                    // Also show in sidebar if space allows (optional enhancement)
+                } catch (err) {
+                    const bubble = document.getElementById(aiBubbleId);
+                    if (bubble) bubble.innerHTML = `<span class="text-red-500">生成失敗: ${err.message}</span>`;
+                }
+
+                btn.disabled = false;
+                btn.innerHTML = '<span>💡</span> 建議問題清單';
             }
         };
+
+        // Event listeners for file upload
         window.onload = () => app.init();
     </script>
 </body>
